@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"text-secondary":"#94A3B8","tertiary-fixed-dim":"#ffb95f","on-background":"#dee2f6","text-primary":"#F8FAFC","secondary":"#4edea3","tertiary-container":"#e79400","on-secondary-fixed":"#002113","on-secondary-container":"#00311f","on-secondary-fixed-variant":"#005236","on-surface":"#dee2f6","on-primary-fixed":"#001f26","secondary-fixed":"#6ffbbe","surface-container":"#1a1f2e","surface-overlay":"#18223C","surface-base":"#0A0F1D","surface-container-highest":"#303444","error":"#ffb4ab","on-tertiary-fixed":"#2a1700","primary-fixed":"#acedff","tertiary":"#ffb95f","tertiary-fixed":"#ffddb8","on-primary-container":"#00424f","on-tertiary-fixed-variant":"#653e00","on-error":"#690005","on-primary-fixed-variant":"#004e5c","surface-tint":"#4cd7f6","surface-container-high":"#252a39","surface-bright":"#343948","surface-container-low":"#161b2a","surface-muted":"#0D1424","status-verified":"#10B981","on-surface-variant":"#bcc9cd","inverse-surface":"#dee2f6","primary-fixed-dim":"#4cd7f6","surface":"#0e1321","on-primary":"#003640","primary":"#4cd7f6","status-tamper":"#EF4444","border-subtle":"#1E293B","inverse-primary":"#00687a","surface-container-lowest":"#090e1c","primary-container":"#06b6d4","on-tertiary-container":"#563400","border-strong":"#334155","on-tertiary":"#472a00","surface-dim":"#0e1321","status-ai":"#06B6D4","on-secondary":"#003824","inverse-on-surface":"#2b303f","error-container":"#93000a","secondary-container":"#00a572","outline-variant":"#3d494c","surface-card":"#11192E","background":"#0e1321","secondary-fixed-dim":"#4edea3","outline":"#869397","surface-variant":"#303444","status-review":"#F59E0B","text-muted":"#64748B","on-error-container":"#ffdad6"},borderRadius:{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},spacing:{"space-xs":"0.25rem","gutter":"1rem","space-lg":"1.25rem","space-md":"0.75rem","space-sm":"0.5rem","margin":"1.5rem","space-xl":"2rem"},fontFamily:{"headline-lg":["Inter"],"body-lg":["Inter"],"headline-sm":["Inter"],"mono-md":["JetBrains Mono"],"label-caps":["JetBrains Mono"],"mono-sm":["JetBrains Mono"],"body-md":["Inter"],"body-sm":["Inter"],"headline-md":["Inter"]},fontSize:{"headline-lg":["1.75rem",{"lineHeight":"2.25rem","letterSpacing":"-0.025em","fontWeight":"600"}],"body-lg":["0.9375rem",{"lineHeight":"1.5rem","fontWeight":"400"}],"headline-sm":["1rem",{"lineHeight":"1.5rem","letterSpacing":"-0.015em","fontWeight":"600"}],"mono-md":["0.8125rem",{"lineHeight":"1.25rem","fontWeight":"500"}],"label-caps":["0.6875rem",{"lineHeight":"0.875rem","letterSpacing":"0.06em","fontWeight":"600"}],"mono-sm":["0.75rem",{"lineHeight":"1rem","fontWeight":"400"}],"body-md":["0.875rem",{"lineHeight":"1.375rem","fontWeight":"400"}],"body-sm":["0.8125rem",{"lineHeight":"1.25rem","fontWeight":"400"}],"headline-md":["1.25rem",{"lineHeight":"1.75rem","letterSpacing":"-0.02em","fontWeight":"600"}]}}}};</script></head><body class="bg-surface-base font-body-md text-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-muted border-r border-border-subtle z-50 flex flex-col justify-between select-none"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center gap-space-md border-b border-border-subtle bg-surface-base/60 backdrop-blur-md"><img alt="ClaimChain Enterprise Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UYltSLGrxkIuJ_da3Ohk5Gaq_68gDLS5tXDPo_AOhz89NzINHwarYg12CNVrFp4C4p6lweZPcUW1r1mymemq9Lkbgd0am2mmuPrzcBKRMdg9P4WJS04AfMPTap80G-GyvVI8V-kigolweLvIqQ0upaOuaE1zkEf-bkVEdEa4_2Waa_1B30QOkih_uMcYayuIClmFxHzBuAgH-2sOGb-2PsGsop9kAcHVmv4LUAnOiHhnfRWmXkpyN9Two"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-text-primary tracking-tight">ClaimChain</span><span class="font-label-caps text-label-caps text-text-muted uppercase tracking-wider">Enterprise Forensic Core</span></div></div><div class="p-space-md border-b border-border-subtle bg-surface-card/40"><div class="flex items-center justify-between mb-space-xs"><div class="flex items-center gap-space-xs"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-status-verified opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-status-verified"></span></span><span class="font-label-caps text-label-caps text-secondary uppercase font-semibold">Polygon L2 Synced</span></div><span class="font-mono-sm text-mono-sm text-text-muted">24ms</span></div><div class="flex items-center justify-between font-mono-sm text-mono-sm"><span class="text-text-muted">Block</span><span class="text-primary font-medium tracking-wide">#49,201,842</span></div></div><nav class="flex flex-col py-space-md px-space-sm gap-space-xs overflow-y-auto" data-active-classes="bg-surface-overlay text-primary border-l-2 border-primary font-semibold"><div class="px-space-sm pt-space-xs pb-space-xs font-label-caps text-label-caps text-text-muted uppercase">Operations Hub</div><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="overview-and-queue" href="#"><span class="material-symbols-outlined text-lg">view_agenda</span>Overview &amp; Queue</a><a aria-current="page" class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg transition-colors bg-surface-overlay text-primary border-l-2 border-primary font-semibold" data-path="forensic-inspection" href="#"><span class="material-symbols-outlined text-lg">biotech</span>Forensic Inspection</a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="immutable-audit-ledger" href="#"><span class="material-symbols-outlined text-lg">receipt_long</span>Immutable Audit Ledger</a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="perceptual-hash-database" href="#"><span class="material-symbols-outlined text-lg">fingerprint</span>Perceptual Hash Database</a><div class="px-space-sm pt-space-md pb-space-xs font-label-caps text-label-caps text-text-muted uppercase">Governance &amp; Evidence</div><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="policy-rules-and-thresholds" href="#"><span class="material-symbols-outlined text-lg">shield</span>Policy Rules &amp; Thresholds</a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="auditor-verification-portal" href="#"><span class="material-symbols-outlined text-lg">verified_user</span>Auditor Verification Portal</a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="system-logs-and-merkle-proofs" href="#"><span class="material-symbols-outlined text-lg">hub</span>System Logs &amp; Merkle Proofs</a></nav></div><div class="p-space-md border-t border-border-subtle bg-surface-card/60 flex items-center justify-between"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-primary text-base">dns</span><span class="font-mono-sm text-mono-sm text-text-secondary">Consensus v4.12.8</span></div><span class="font-label-caps text-label-caps px-space-xs py-0.5 rounded bg-surface-container text-secondary font-mono border border-border-subtle">STABLE</span></div></aside><div class="pl-72 flex flex-col min-h-screen"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-base/90 backdrop-blur-xl border-b border-border-subtle z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg flex-1 max-w-2xl"><div class="flex items-center bg-surface-card border border-border-subtle rounded-lg p-0.5"><button class="px-space-md py-1 text-label-caps font-label-caps uppercase rounded bg-surface-overlay text-primary font-semibold">Production</button><button class="px-space-md py-1 text-label-caps font-label-caps uppercase rounded text-text-muted hover:text-on-surface transition-colors">Regulated Sandbox</button></div><div class="relative flex-1"><span class="material-symbols-outlined absolute left-space-md top-1/2 -translate-y-1/2 text-text-muted text-base">search</span><input class="w-full pl-9 pr- space-md py-1.5 bg-surface-card border border-border-subtle rounded-lg font-mono-sm text-mono-sm text-on-surface placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors" placeholder="Search Claim ID, Claimant Aadhaar/ID, or TX Hash (⌘K)" type="text"/></div></div><div class="flex items-center gap-space-lg"><div class="hidden xl:flex items-center gap-space-md px-space-md py-1 bg-surface-card border border-border-subtle rounded-lg font-mono-sm text-mono-sm"><div class="flex items-center gap-space-xs"><span class="text-text-muted">AI Latency:</span><span class="text-status-ai font-medium">42s</span></div><div class="w-px h-3 bg-border-subtle"></div><div class="flex items-center gap-space-xs"><span class="text-text-muted">Chain Finality:</span><span class="text-secondary font-medium">1.8s</span></div></div><div class="relative"><button class="w-8 h-8 rounded-lg bg-surface-card border border-border-subtle flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:border-border-strong transition-colors"><span class="material-symbols-outlined text-lg">notifications</span></button><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-status-tamper ring-2 ring-surface-base"></span></div><div class="h-8 w-px bg-border-subtle"></div><div class="flex items-center gap-space-md"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-border-strong" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrsgjM-m7ciWbFXq4X0kQzGLjhBAl_qZ7GklMmv5yP4fXqnaZB5nrJYc-T1vGxD86D1Po6wCpBvujn8dx7K_2nq9rqiphL6rdffucxZTN9mvP_pII--XDecGhNz-NSFNufLe8DXdiTW8RZPLBgfdvTjIq0jmuAXXBu96CfOvvSknwKalDsZ0kTv2v-NP2vrCuRmv4HZItyUhLYKOI_NvnJ_OWbb4DE-ywOaenIk4JbvFEjDdizBsT5"/><div class="flex flex-col text-left"><span class="font-body-sm text-body-sm text-text-primary font-medium leading-tight">Dr. Ananya Sharma</span><span class="font-label-caps text-label-caps text-text-muted tracking-tight leading-tight">Chief Risk &amp; Fraud Officer</span></div><span class="material-symbols-outlined text-text-muted text-sm cursor-pointer hover:text-on-surface">expand_more</span></div></div></header><main class="w-full pt-16 bg-surface-base flex-1"><div class="flex flex-col w-full">
+<!-- Case Header & Telemetry Strip -->
+<section class="p-space-lg bg-surface-muted border-b border-border-subtle flex flex-col gap-space-md">
+<!-- Top Row: Metadata Badges & Case ID -->
+<div class="flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md flex-wrap">
+<span class="font-mono-md text-mono-md text-primary bg-surface-card px-space-md py-1 rounded border border-border-subtle flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-sm text-status-tamper animate-pulse">warning</span>
+          #CLM-8919
+        </span>
+<div class="flex items-center gap-space-xs">
+<span class="font-label-caps text-label-caps uppercase px-space-sm py-0.5 rounded bg-status-tamper/15 text-status-tamper border border-status-tamper/30 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-status-tamper"></span>
+            Critical Risk Score: 94/100
+          </span>
+<span class="font-label-caps text-label-caps uppercase px-space-sm py-0.5 rounded bg-surface-card text-text-secondary border border-border-subtle">
+            Perceptual Duplicate Hash
+          </span>
+<span class="font-label-caps text-label-caps uppercase px-space-sm py-0.5 rounded bg-surface-card text-secondary border border-border-subtle">
+            Polygon L2 Ingested
+          </span>
+</div>
+</div>
+<div class="flex items-center gap-space-md font-mono-sm text-mono-sm text-text-muted">
+<span>Epoch: <strong class="text-text-primary">1728915721</strong></span>
+<span>•</span>
+<span>Merkle Root: <span class="text-primary hover:underline cursor-pointer">0x9fa4…73c1</span></span>
+</div>
+</div>
+<!-- Title & Subject Info -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="space-y-1">
+<h1 class="font-headline-md text-headline-md text-text-primary tracking-tight flex items-center gap-space-sm">
+          Claim #CLM-8919 — Paddy Crop Inundation Damage
+          <span class="material-symbols-outlined text-status-tamper text-base" title="Flagged for duplicate asset cross-district">flag</span>
+</h1>
+<div class="flex flex-wrap items-center gap-x-space-lg gap-y-1 font-body-sm text-body-sm text-text-secondary">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-text-muted">person</span>
+            Claimant: <strong class="text-text-primary ml-1">Devendra Singh</strong> (Bhiwandi, Thane, MH)
+          </span>
+<span>•</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-text-muted">verified</span>
+            Scheme: <strong class="text-text-primary ml-1">Pradhan Mantri Fasal Bima Micro-Tier (#PB-7782)</strong>
+</span>
+<span>•</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-text-muted">schedule</span>
+            Logged: 8 mins ago via Android App v2.4.1
+          </span>
+</div>
+</div>
+<!-- Financial Metrics Pill Matrix -->
+<div class="flex items-center gap-space-md bg-surface-card p-space-sm rounded-lg border border-border-subtle">
+<div class="px-space-md py-1 border-r border-border-subtle">
+<p class="font-label-caps text-label-caps uppercase text-text-muted">Requested Amount</p>
+<p class="font-headline-sm text-headline-sm text-text-primary font-mono">₹9,200</p>
+</div>
+<div class="px-space-md py-1 border-r border-border-subtle">
+<p class="font-label-caps text-label-caps uppercase text-status-tamper">AI Proposed Payout</p>
+<p class="font-headline-sm text-headline-sm text-status-tamper font-mono font-bold">₹0 <span class="font-label-caps text-label-caps font-normal text-text-muted">(REJECT)</span></p>
+</div>
+<div class="px-space-md py-1">
+<p class="font-label-caps text-label-caps uppercase text-text-muted">Confidence Index</p>
+<p class="font-headline-sm text-headline-sm text-primary font-mono">99.2%</p>
+</div>
+</div>
+</div>
+<!-- Rapid Action Command Ribbon -->
+<div class="flex flex-wrap items-center justify-between gap-space-md pt-space-xs border-t border-border-subtle/60">
+<div class="flex flex-wrap items-center gap-space-sm">
+<button class="h-8 px-space-md bg-status-tamper hover:bg-status-tamper/90 text-text-primary font-body-sm text-body-sm font-semibold rounded flex items-center gap-space-xs transition-all shadow-sm active:scale-95" id="btn-confirm-fraud">
+<span class="material-symbols-outlined text-sm">block</span>
+          Confirm Fraud &amp; Blacklist Hash
+        </button>
+<button class="h-8 px-space-md bg-surface-overlay hover:bg-surface-container border border-border-strong text-text-primary font-body-sm text-body-sm rounded flex items-center gap-space-xs transition-all active:scale-95" id="btn-override-open">
+<span class="material-symbols-outlined text-sm text-secondary">gavel</span>
+          Override AI &amp; Approve ₹9,200
+        </button>
+<button class="h-8 px-space-md bg-surface-overlay hover:bg-surface-container border border-border-subtle text-text-secondary hover:text-text-primary font-body-sm text-body-sm rounded flex items-center gap-space-xs transition-all">
+<span class="material-symbols-outlined text-sm text-status-ai">satellite_alt</span>
+          Request On-Field IoT Satellite Cross-Check
+        </button>
+</div>
+<button class="h-8 px-space-md bg-surface-card hover:bg-surface-container border border-border-subtle text-text-secondary hover:text-text-primary font-mono-sm text-mono-sm rounded flex items-center gap-space-xs transition-all">
+<span class="material-symbols-outlined text-sm">download</span>
+        Export Cryptographic Dossier (.json + .sig)
+      </button>
+</div>
+</section>
+<!-- Main Multi-Column Forensic Workspace -->
+<div class="p-space-lg grid grid-cols-1 xl:grid-cols-12 gap-space-lg bg-surface-base">
+<!-- LEFT & CENTER (Cols 1-8): Visual Forensic Split Workbench & Diagnostics -->
+<div class="xl:col-span-8 flex flex-col gap-space-lg">
+<!-- Visual Forensic Workbench Card -->
+<div class="bg-surface-card rounded-lg border border-border-subtle overflow-hidden shadow-sm flex flex-col">
+<!-- Workbench Toolbar -->
+<div class="h-11 px-space-md bg-surface-muted border-b border-border-subtle flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-status-ai text-lg">compare</span>
+<span class="font-headline-sm text-headline-sm text-text-primary">Perceptual Hash &amp; Forensic Comparison Workbench</span>
+</div>
+<div class="flex items-center gap-space-sm font-mono-sm text-mono-sm">
+<button class="px-space-sm py-0.5 rounded bg-surface-overlay text-status-tamper border border-status-tamper/30 flex items-center gap-1 hover:bg-status-tamper/10 transition-colors" id="toggle-heatmap">
+<span class="material-symbols-outlined text-xs">local_fire_department</span>
+              Heatmap: Active
+            </button>
+<span class="text-text-muted">|</span>
+<button class="px-space-sm py-0.5 rounded bg-surface-overlay text-text-secondary border border-border-subtle hover:text-text-primary flex items-center gap-1 transition-colors" id="sync-zoom">
+<span class="material-symbols-outlined text-xs">sync</span>
+              Sync Pan/Zoom: 100%
+            </button>
+</div>
+</div>
+<!-- Alert Bar: Perceptual Match Notification -->
+<div class="bg-status-tamper/10 border-b border-status-tamper/30 px-space-md py-2 flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-status-tamper text-base">emergency_home</span>
+<div class="flex items-center gap-2 flex-wrap font-body-sm text-body-sm">
+<span class="font-semibold text-status-tamper">Perceptual Hash Collision Detected:</span>
+<span class="text-on-surface">Hamming Distance = <strong class="text-status-tamper font-mono">2</strong> (98.4% Structural Similarity)</span>
+<span class="text-text-muted font-mono-sm">Matched historical archive #CLM-4102</span>
+</div>
+</div>
+<span class="font-label-caps text-label-caps uppercase font-mono px-2 py-0.5 bg-status-tamper text-surface-base font-bold rounded">
+            Tampered Crop Re-Upload
+          </span>
+</div>
+<!-- Side-by-Side Dual Viewport -->
+<div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border-strong bg-surface-base">
+<!-- Viewport 1: Uploaded Evidence (Raw) -->
+<div class="p-space-md flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs font-mono-sm text-mono-sm text-text-primary">
+<span class="w-2 h-2 rounded-full bg-status-ai"></span>
+<span>Current Submission (#CLM-8919)</span>
+</div>
+<span class="font-label-caps text-label-caps text-text-muted uppercase">Bhiwandi Site • Raw Input</span>
+</div>
+<!-- Image Container with CV Bounding Box Overlays -->
+<div class="relative aspect-video rounded overflow-hidden bg-surface-muted border border-border-subtle group">
+<img class="w-full h-full object-cover" data-alt="High-angle smartphone photograph of a flooded green paddy field with waterlogging around young rice seedlings, cloudy daytime outdoor lighting with water reflection and muddy edges" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHahYFkjeIE0mTNXJJ3Jo2YplQwJh0Zf_6Z2U14nOc1ZlOmQmm9aOWy_TUz95aksKzTDhyXgZW98KtbxtgjubjuhS6umVfFi8K5-tBxJ-1fnk_yLRRk5fhm69f4L16T-fAuE7QHzhF6-Fj7aS_WF-taMiq2JS7HzZuICT5diZCCbOTStSJpQ-cRRdx5GhM_P7_NcL1Waluxie8iVKkBPy_dOcD1x0Dq_nYwf13exZ5Gy5BEBPxyE8T"/>
+<!-- CV Bounding Box: Detected Water Level -->
+<div class="absolute inset-x-8 top-10 bottom-6 border-2 border-dashed border-status-ai bg-status-ai/10 rounded flex flex-col justify-between p-2 pointer-events-none">
+<div class="flex items-center justify-between font-mono-sm text-mono-sm">
+<span class="bg-surface-base/90 text-status-ai px-1.5 py-0.5 rounded border border-status-ai/40">Water Level: 38cm [Seg: 0.94]</span>
+<span class="bg-surface-base/90 text-status-tamper px-1.5 py-0.5 rounded border border-status-tamper/40">Color Saturation Shift +18%</span>
+</div>
+<div class="self-start font-mono-sm text-mono-sm bg-surface-base/90 text-text-primary px-1.5 py-0.5 rounded">
+                  Paddy Stem Inundation: Grade III
+                </div>
+</div>
+<!-- Top Left Source Tag -->
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded bg-surface-base/80 backdrop-blur font-mono-sm text-mono-sm text-text-secondary border border-border-subtle">
+                SHA-256: 4e9c8f…109d
+              </div>
+</div>
+<!-- EXIF Metadata Table -->
+<div class="bg-surface-card p-space-sm rounded border border-border-subtle font-mono-sm text-mono-sm space-y-1">
+<div class="flex justify-between text-text-secondary">
+<span>Capture Device:</span>
+<span class="text-text-primary">Xiaomi Redmi 9A (Kernel 4.9.190)</span>
+</div>
+<div class="flex justify-between text-text-secondary">
+<span>GPS Telemetry:</span>
+<span class="text-primary font-mono">19.2968° N, 73.0621° E (Acc: ±4m)</span>
+</div>
+<div class="flex justify-between text-text-secondary">
+<span>Metadata Timestamp:</span>
+<span class="text-text-primary">14 Oct 2024, 14:14:02 IST</span>
+</div>
+<div class="flex justify-between text-text-secondary">
+<span>pHash Vector:</span>
+<span class="text-text-primary font-mono tracking-tight">b100110101100101</span>
+</div>
+</div>
+</div>
+<!-- Viewport 2: Matched Historical Ledger Image -->
+<div class="p-space-md flex flex-col gap-space-sm bg-surface-card/30">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs font-mono-sm text-mono-sm text-status-tamper">
+<span class="w-2 h-2 rounded-full bg-status-tamper animate-ping"></span>
+<span>Ledger Match: Claim #CLM-4102</span>
+</div>
+<span class="font-label-caps text-label-caps text-status-tamper uppercase font-semibold">Filed 11 Months Ago (Nashik)</span>
+</div>
+<!-- Image Container with Difference Heatmap Overlay -->
+<div class="relative aspect-video rounded overflow-hidden bg-surface-muted border border-border-subtle group">
+<img class="w-full h-full object-cover filter contrast-125" data-alt="Archive agricultural photograph of identical flooded paddy field crop from slightly wider angle, overcast monsoon lighting, identical water ripples and row layout" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkugXq9wc1qZUhUUuvCuiR1HWhqYw8vZhfkVWFIQ_eNSsvtDtDE013q7aNdY7Nof8H7fcur1nH9VZoCh5AcrhiBtGlvGUVp08_nZ_IDHZfL3aF__CmmOT2ReKFVEGphbN-cRExppBUxUi-qNwnxzdq_C-aRQmsu1MLvuFrK-7RH4-hVLpRbTI6Bl5Bt26acmEUewAHY9gh4V6AvyVUy_ge2TiQGYNjbbMH1q59gmo0X49g3BBauyyE"/>
+<!-- Contour Difference Heatmap Overlay -->
+<div class="absolute inset-0 bg-gradient-to-tr from-status-tamper/20 via-transparent to-status-review/30 mix-blend-color-burn pointer-events-none" id="diff-overlay">
+<!-- Artificial Contour Vector Line (SVG) -->
+<svg class="w-full h-full opacity-70" fill="none" viewbox="0 0 400 225" xmlns="http://www.w3.org/2000/svg">
+<path d="M 40,80 Q 90,140 160,110 T 320,130" stroke="#EF4444" stroke-dasharray="4 2" stroke-width="2"></path>
+<rect fill="rgba(239, 68, 68, 0.15)" height="110" stroke="#EF4444" stroke-width="1.5" width="220" x="75" y="65"></rect>
+<text fill="#EF4444" font-family="JetBrains Mono" font-size="10" x="82" y="80">MATCHED CROP CONTOUR: NASHIK 2023</text>
+</svg>
+</div>
+<!-- Top Left Archive Tag -->
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded bg-surface-base/80 backdrop-blur font-mono-sm text-mono-sm text-status-tamper border border-status-tamper/40">
+                Block #41,892,104 • Settled ₹8,500
+              </div>
+</div>
+<!-- Historical Match Comparison Table -->
+<div class="bg-surface-card p-space-sm rounded border border-border-subtle font-mono-sm text-mono-sm space-y-1">
+<div class="flex justify-between text-text-secondary">
+<span>Original Claimant:</span>
+<span class="text-text-primary">Ramesh V. Patil (Niphad, Nashik)</span>
+</div>
+<div class="flex justify-between text-text-secondary">
+<span>Original Geo-Fence:</span>
+<span class="text-status-tamper font-mono">20.0822° N, 74.1120° E (~142 km away)</span>
+</div>
+<div class="flex justify-between text-text-secondary">
+<span>Original Timestamp:</span>
+<span class="text-text-primary">22 Nov 2023, 09:31:40 IST</span>
+</div>
+<div class="flex justify-between text-text-secondary">
+<span>Structural Match:</span>
+<span class="text-status-tamper font-semibold">98.4% Match (Affine Transform Detected)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Comparative Delta Inspector Footnote -->
+<div class="px-space-md py-2 bg-surface-muted border-t border-border-subtle flex items-center justify-between text-body-sm text-text-secondary">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-text-muted">tune</span>
+<span>Forensic Verdict: Image is an edited 8% crop with warmth compensation (+12K) to bypass naive hash matching.</span>
+</div>
+<span class="font-mono-sm text-mono-sm text-text-muted">Algorithm: dHash + pHash + ORB Descriptor Vector</span>
+</div>
+</div>
+<!-- AI Multi-Modal Engine Diagnostic Breakdown Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- Pillar 1: Vision Diagnostic -->
+<div class="bg-surface-card p-space-md rounded-lg border border-border-subtle flex flex-col justify-between space-y-space-md">
+<div class="space-y-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-text-muted">Vision Ingest</span>
+<span class="material-symbols-outlined text-status-tamper text-base">image_not_supported</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-text-primary">Damage vs Legitimacy</h2>
+<p class="font-body-sm text-body-sm text-text-secondary">
+              Physical water inundation is visually real in pixel space, but cryptographic integrity validation failed due to historical duplicate collision.
+            </p>
+</div>
+<div class="p-space-xs bg-surface-base rounded border border-border-subtle font-mono-sm text-mono-sm flex justify-between">
+<span class="text-text-muted">Authenticity Index:</span>
+<span class="text-status-tamper font-semibold">1.6% (FORGERY)</span>
+</div>
+</div>
+<!-- Pillar 2: Satellite & Weather Radar Cross-Check -->
+<div class="bg-surface-card p-space-md rounded-lg border border-border-subtle flex flex-col justify-between space-y-space-md">
+<div class="space-y-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-text-muted">Satellite Radar Telemetry</span>
+<span class="material-symbols-outlined text-status-review text-base">cloud</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-text-primary">Radar Weather Inquest</h2>
+<p class="font-body-sm text-body-sm text-text-secondary">
+              Sentinel-2 Synthetic Aperture Radar (SAR) recorded <strong class="text-text-primary">12mm</strong> precipitation across Bhiwandi grid in the last 72 hours.
+            </p>
+</div>
+<div class="p-space-xs bg-surface-base rounded border border-border-subtle font-mono-sm text-mono-sm flex justify-between">
+<span class="text-text-muted">Radar Rainfall Discrepancy:</span>
+<span class="text-status-tamper font-semibold">-28cm vs Claim</span>
+</div>
+</div>
+<!-- Pillar 3: Smart Contract Rule Matrix -->
+<div class="bg-surface-card p-space-md rounded-lg border border-border-subtle flex flex-col justify-between space-y-space-md">
+<div class="space-y-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-text-muted">Contract Governance</span>
+<span class="material-symbols-outlined text-status-tamper text-base">gavel</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-text-primary">Clause 4.2 Violation</h2>
+<p class="font-body-sm text-body-sm text-text-secondary">
+              "Clause 4.2 (Authentic Proof of Immediate In-Situ Incident) Violated." Automated escrow lock engaged on wallet address 0x932…ba1.
+            </p>
+</div>
+<div class="p-space-xs bg-surface-base rounded border border-border-subtle font-mono-sm text-mono-sm flex justify-between">
+<span class="text-text-muted">Execution Status:</span>
+<span class="text-status-tamper font-semibold">ESCHEAT_HOLD</span>
+</div>
+</div>
+</div>
+<!-- Human Officer Final Adjudication Deck -->
+<div class="bg-surface-card rounded-lg border border-border-strong p-space-lg flex flex-col gap-space-md relative overflow-hidden">
+<div class="absolute top-0 right-0 transform translate-x-4 -translate-y-4 w-32 h-32 bg-status-tamper/5 rounded-full pointer-events-none blur-2xl"></div>
+<div class="flex items-center justify-between border-b border-border-subtle pb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-xl">draw</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-text-primary">Auditor Adjudication &amp; Cryptographic Signature Deck</h2>
+<p class="font-body-sm text-body-sm text-text-secondary">Your determination will commit a new event node to the Polygon L2 ledger.</p>
+</div>
+</div>
+<span class="font-mono-sm text-mono-sm text-secondary bg-surface-base px-space-sm py-1 rounded border border-border-subtle flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+            Hardware Key (HSM-7) Ready
+          </span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<div class="space-y-space-xs">
+<label class="font-label-caps text-label-caps uppercase text-text-muted">Primary Forensic Reason Code</label>
+<select class="w-full bg-surface-base border border-border-subtle rounded px-space-md py-1.5 font-body-sm text-body-sm text-text-primary focus:outline-none focus:border-primary">
+<option selected="">Confirmed Duplicate Fraudulent Photo (pHash Match &gt; 95%)</option>
+<option>Satellite Weather Radar Conflict (&gt; 25mm Gap)</option>
+<option>Geofence Coordinate Mismatch (&gt; 50km Drift)</option>
+<option>Overridden: Legitimate Adjacent Plot Flood Verification</option>
+</select>
+</div>
+<div class="space-y-space-xs">
+<label class="font-label-caps text-label-caps uppercase text-text-muted">Regulatory Reporting Vector</label>
+<select class="w-full bg-surface-base border border-border-subtle rounded px-space-md py-1.5 font-body-sm text-body-sm text-text-primary focus:outline-none focus:border-primary">
+<option selected="">IRDAI Circular 14B - Agricultural Syndicate Fraud</option>
+<option>Internal Flag Only (First-time offender cautionary list)</option>
+<option>Criminal Referral - State Agricultural Vigilance Cell</option>
+</select>
+</div>
+</div>
+<div class="space-y-space-xs">
+<label class="font-label-caps text-label-caps uppercase text-text-muted">Investigator Rationale &amp; Field Inquest Notes</label>
+<textarea class="w-full bg-surface-base border border-border-subtle rounded p-space-sm font-body-sm text-body-sm text-text-primary focus:outline-none focus:border-primary placeholder:text-text-muted font-mono" placeholder="Image verified against historical claim CLM-4102. Same rice stalks, water ripple geometry and boundary markers confirmed in Niphad archive. Immediate rejection and ledger blacklist recommended..." rows="2"></textarea>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-space-md pt-space-xs">
+<div class="flex items-center gap-space-sm text-mono-sm font-mono-sm text-text-muted">
+<span class="material-symbols-outlined text-sm text-secondary">fingerprint</span>
+            Signer: Dr. Ananya Sharma (0x28B4...92eF)
+          </div>
+<div class="flex items-center gap-space-sm">
+<button class="px-space-md py-1.5 bg-surface-overlay hover:bg-surface-container border border-border-subtle font-body-sm text-body-sm text-text-secondary hover:text-text-primary rounded transition-all" id="btn-escalate-field">
+              Assign Field Surveyor Visit
+            </button>
+<button class="px-space-lg py-1.5 bg-status-tamper hover:bg-status-tamper/90 text-text-primary font-body-sm text-body-sm font-semibold rounded shadow-md flex items-center gap-1 active:scale-95 transition-all" id="btn-sign-reject">
+<span class="material-symbols-outlined text-base">verified</span>
+              Sign &amp; Commit Rejection (Block #49.2M)
+            </button>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN (Cols 9-12): Cryptographic Seal, Merkle Proofs & Ledger Trail -->
+<div class="xl:col-span-4 flex flex-col gap-space-lg">
+<!-- Ledger Integrity & Merkle Badge Card -->
+<div class="bg-surface-card rounded-lg border border-border-subtle p-space-md space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-lg">shield_lock</span>
+<h2 class="font-headline-sm text-headline-sm text-text-primary">Ledger Provenance Proof</h2>
+</div>
+<span class="font-label-caps text-label-caps uppercase bg-secondary/10 text-secondary border border-secondary/30 px-space-xs py-0.5 rounded">
+            All Hashes Verified
+          </span>
+</div>
+<!-- Merkle Graphic Mini-Visualization -->
+<div class="bg-surface-base p-space-sm rounded border border-border-subtle flex flex-col gap-2">
+<div class="flex items-center justify-between font-mono-sm text-mono-sm border-b border-border-subtle pb-1">
+<span class="text-text-muted">Merkle Root:</span>
+<span class="text-primary font-mono font-medium">0x8a1b…e07c</span>
+</div>
+<div class="flex items-center justify-center gap-1 py-1">
+<div class="flex flex-col items-center">
+<div class="w-7 h-7 rounded bg-surface-card border border-secondary/40 flex items-center justify-center text-secondary text-xs font-mono font-bold">L1</div>
+<span class="text-[9px] font-mono text-text-muted mt-0.5">0x8a…</span>
+</div>
+<span class="text-text-muted text-xs">+</span>
+<div class="flex flex-col items-center">
+<div class="w-7 h-7 rounded bg-surface-card border border-secondary/40 flex items-center justify-center text-secondary text-xs font-mono font-bold">L2</div>
+<span class="text-[9px] font-mono text-text-muted mt-0.5">0x3e…</span>
+</div>
+<span class="text-text-muted text-xs">→</span>
+<div class="flex flex-col items-center">
+<div class="w-7 h-7 rounded bg-surface-card border border-secondary/40 flex items-center justify-center text-primary text-xs font-mono font-bold">H12</div>
+<span class="text-[9px] font-mono text-text-muted mt-0.5">Node</span>
+</div>
+<span class="text-text-muted text-xs">→</span>
+<div class="flex flex-col items-center">
+<div class="w-7 h-7 rounded bg-surface-card border border-status-tamper/50 flex items-center justify-center text-status-tamper text-xs font-mono font-bold">ROOT</div>
+<span class="text-[9px] font-mono text-status-tamper mt-0.5">Block</span>
+</div>
+</div>
+<p class="text-center font-mono-sm text-mono-sm text-text-secondary text-xs">
+            Zero-knowledge proof validation confirmed on Polygon POS Contract #0xCc21…
+          </p>
+</div>
+<!-- Chain Provenance Event Stream -->
+<div class="space-y-space-sm pt-space-xs">
+<p class="font-label-caps text-label-caps uppercase text-text-muted tracking-wider">Immutable Chain Sequence</p>
+<div class="relative pl-6 space-y-space-md before:absolute before:left-2 before:top-2 before:bottom-2 before:w-px before:border-l before:border-dashed before:border-border-strong">
+<!-- Event 1 -->
+<div class="relative group">
+<span class="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-secondary ring-4 ring-surface-card"></span>
+<div class="flex flex-col">
+<div class="flex items-center justify-between">
+<span class="font-mono-md text-mono-md text-text-primary">1. Mobile Ingestion Sealed</span>
+<span class="font-mono-sm text-mono-sm text-text-muted">14:22:01 IST</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary">Image &amp; claimant Aadhaar hash written to temporary buffer.</p>
+<div class="mt-1 font-mono-sm text-mono-sm text-primary flex items-center gap-1 cursor-pointer hover:underline">
+<span class="material-symbols-outlined text-xs">tag</span>
+                  TX: 0x8a1bf2…3f890
+                </div>
+</div>
+</div>
+<!-- Event 2 -->
+<div class="relative group">
+<span class="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-secondary ring-4 ring-surface-card"></span>
+<div class="flex flex-col">
+<div class="flex items-center justify-between">
+<span class="font-mono-md text-mono-md text-text-primary">2. CV &amp; OCR Extraction</span>
+<span class="font-mono-sm text-mono-sm text-text-muted">14:22:24 IST</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary">Extracted damage depth (38cm) and red/green channel ratios.</p>
+<div class="mt-1 font-mono-sm text-mono-sm text-primary flex items-center gap-1 cursor-pointer hover:underline">
+<span class="material-symbols-outlined text-xs">tag</span>
+                  TX: 0x3e4d99…a217c
+                </div>
+</div>
+</div>
+<!-- Event 3: Tamper Collision Flagged -->
+<div class="relative group">
+<span class="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-status-tamper ring-4 ring-surface-card animate-ping"></span>
+<div class="flex flex-col">
+<div class="flex items-center justify-between">
+<span class="font-mono-md text-mono-md text-status-tamper font-semibold">3. Duplicate Hash Flagged</span>
+<span class="font-mono-sm text-mono-sm text-text-muted">14:22:42 IST</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary">pHash distance = 2 trigger against historical repository block #41.8M.</p>
+<div class="mt-1 font-mono-sm text-mono-sm text-status-tamper flex items-center gap-1 cursor-pointer hover:underline">
+<span class="material-symbols-outlined text-xs">error</span>
+                  TX: 0x91c2bb…40aa8
+                </div>
+</div>
+</div>
+<!-- Event 4: Pending Adjudication -->
+<div class="relative">
+<span class="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-status-review ring-4 ring-surface-card"></span>
+<div class="flex flex-col">
+<div class="flex items-center justify-between">
+<span class="font-mono-md text-mono-md text-status-review">4. Officer Review In Flight</span>
+<span class="font-mono-sm text-mono-sm text-status-review animate-pulse">Awaiting Signature</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary">Pending cryptographic consensus confirmation from Dr. Ananya Sharma.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Reference Claimant Profile & Risk Metrics -->
+<div class="bg-surface-card rounded-lg border border-border-subtle p-space-md space-y-space-sm">
+<div class="flex items-center justify-between border-b border-border-subtle pb-space-xs">
+<span class="font-headline-sm text-headline-sm text-text-primary">Claimant Identity Dossier</span>
+<span class="font-mono-sm text-mono-sm text-status-review bg-status-review/10 px-1.5 py-0.5 rounded border border-status-review/30">Watchlist Level 1</span>
+</div>
+<div class="space-y-space-xs font-body-sm text-body-sm">
+<div class="flex justify-between py-0.5 border-b border-border-subtle/50">
+<span class="text-text-muted">Name / Aadhaar Hash:</span>
+<span class="text-text-primary font-mono">Devendra S. (SHA: 418…9a2)</span>
+</div>
+<div class="flex justify-between py-0.5 border-b border-border-subtle/50">
+<span class="text-text-muted">Registered Land Holding:</span>
+<span class="text-text-primary font-mono">1.8 Hectares (Khasra #84/2)</span>
+</div>
+<div class="flex justify-between py-0.5 border-b border-border-subtle/50">
+<span class="text-text-muted">Past Claims Filed:</span>
+<span class="text-text-primary font-mono">3 Claims (2 Approved, 1 Pending)</span>
+</div>
+<div class="flex justify-between py-0.5">
+<span class="text-text-muted">Payout Destination:</span>
+<span class="text-text-primary font-mono">UPI: devendra92@icici</span>
+</div>
+</div>
+<div class="p-space-xs bg-surface-muted rounded border border-border-subtle flex items-center justify-between text-mono-sm font-mono-sm text-text-secondary">
+<span>Agent Device Fingerprint:</span>
+<span class="text-primary">IMEI: 8690…110</span>
+</div>
+</div>
+<!-- Live Ledger Consensus Telemetry Tile -->
+<div class="bg-surface-card rounded-lg border border-border-subtle p-space-md flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-text-muted">Consensus Heartbeat</span>
+<span class="flex h-2 w-2 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+</span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm font-mono-sm text-mono-sm">
+<div class="bg-surface-base p-space-xs rounded border border-border-subtle">
+<span class="text-text-muted text-xs block">Gas Incurred:</span>
+<span class="text-text-primary font-bold">0.0014 MATIC</span>
+</div>
+<div class="bg-surface-base p-space-xs rounded border border-border-subtle">
+<span class="text-text-muted text-xs block">Confirmations:</span>
+<span class="text-secondary font-bold">34 Blocks</span>
+</div>
+</div>
+<p class="font-mono-sm text-mono-sm text-text-muted text-xs text-center">
+          Proof can be verified offline via ClaimChain CLI: <code class="text-primary font-mono">cc-verify clm-8919.proof</code>
+</p>
+</div>
+</div>
+</div>
+<!-- Notification Toast Container (Dynamic State via Micro-JS) -->
+<div class="fixed bottom-6 right-6 max-w-md bg-surface-overlay border border-border-strong rounded-lg p-space-md shadow-2xl z-50 transform translate-y-24 opacity-0 pointer-events-none transition-all duration-300 flex items-start gap-space-md" id="toast-notify">
+<span class="material-symbols-outlined text-secondary text-2xl" id="toast-icon">check_circle</span>
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-text-primary" id="toast-title">Action Executed</h3>
+<p class="font-body-sm text-body-sm text-text-secondary" id="toast-msg">Transaction committed to Polygon L2 ledger.</p>
+</div>
+</div>
+<!-- Client-side Micro-interactions -->
+<script>
+    (function() {
+      // Heatmap toggle state
+      const heatmapBtn = document.getElementById('toggle-heatmap');
+      const diffOverlay = document.getElementById('diff-overlay');
+      let heatmapActive = true;
+
+      if (heatmapBtn && diffOverlay) {
+        heatmapBtn.addEventListener('click', function() {
+          heatmapActive = !heatmapActive;
+          if (heatmapActive) {
+            diffOverlay.style.display = 'block';
+            heatmapBtn.textContent = 'Heatmap: Active';
+            heatmapBtn.className = 'px-space-sm py-0.5 rounded bg-surface-overlay text-status-tamper border border-status-tamper/30 flex items-center gap-1 hover:bg-status-tamper/10 transition-colors';
+          } else {
+            diffOverlay.style.display = 'none';
+            heatmapBtn.textContent = 'Heatmap: Hidden';
+            heatmapBtn.className = 'px-space-sm py-0.5 rounded bg-surface-overlay text-text-muted border border-border-subtle flex items-center gap-1 hover:bg-surface-container transition-colors';
+          }
+        });
+      }
+
+      // Action Toasts Helper
+      const toast = document.getElementById('toast-notify');
+      const toastTitle = document.getElementById('toast-title');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+
+      function showToast(title, msg, isError) {
+        if (!toast) return;
+        toastTitle.textContent = title;
+        toastMsg.textContent = msg;
+        if (isError) {
+          toastIcon.textContent = 'warning';
+          toastIcon.className = 'material-symbols-outlined text-status-tamper text-2xl';
+        } else {
+          toastIcon.textContent = 'verified';
+          toastIcon.className = 'material-symbols-outlined text-secondary text-2xl';
+        }
+        toast.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
+        setTimeout(function() {
+          toast.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
+        }, 4000);
+      }
+
+      // Action Handlers
+      const btnSignReject = document.getElementById('btn-sign-reject');
+      if (btnSignReject) {
+        btnSignReject.addEventListener('click', function() {
+          showToast('Adjudication Sealed on Chain', 'Rejection hash 0x7c49...b1 signed with HSM-7. Claim marked FRAUD_FINAL.', true);
+        });
+      }
+
+      const btnConfirmFraud = document.getElementById('btn-confirm-fraud');
+      if (btnConfirmFraud) {
+        btnConfirmFraud.addEventListener('click', function() {
+          showToast('Image Hash Blacklisted', 'Perceptual hash added to global syndicate fraud registry.', true);
+        });
+      }
+
+      const btnOverride = document.getElementById('btn-override-open');
+      if (btnOverride) {
+        btnOverride.addEventListener('click', function() {
+          showToast('Override Initiated', 'Requires secondary supervisor multi-sig token.', false);
+        });
+      }
+
+      const btnField = document.getElementById('btn-escalate-field');
+      if (btnField) {
+        btnField.addEventListener('click', function() {
+          showToast('Field Surveyor Dispatched', 'Bhiwandi Block Agronomist notified with GPS polygon coordinates.', false);
+        });
+      }
+    })();
+  </script>
+</div></main></div></body></html>
