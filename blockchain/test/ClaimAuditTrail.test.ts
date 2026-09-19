@@ -231,4 +231,33 @@ describe("ClaimAuditTrail", function () {
     const trail = await contract.getAuditTrail(tid);
     expect(trail[0].note).to.equal(note);
   });
+
+  it("seals and chains the extended HUMAN_* statuses (enum delta)", async function () {
+    const tid = ethers.id("CLM-HUMAN-TEST");
+    const HUMAN_REVIEW = 6n;
+    const HUMAN_APPROVED = 7n;
+    const HUMAN_REJECTED = 8n;
+
+    await contract.connect(owner).sealClaimState(tid, ethers.id("h1"), STATUS.AI_FLAGGED, "pipeline flag");
+    await contract
+      .connect(owner)
+      .sealClaimState(tid, ethers.id("h2"), HUMAN_REVIEW, "appeal accepted for second look");
+    await contract
+      .connect(owner)
+      .sealClaimState(
+        tid,
+        ethers.id("h3"),
+        HUMAN_APPROVED,
+        "Human review: geotag verified on-site; payout unlocked (reason > 20 chars)"
+      );
+    await contract.connect(owner).sealClaimState(ethers.id("CLM-HUMAN-OTHER"), ethers.id("h4"), HUMAN_REJECTED, "Human review: evidence failed on-site verification");
+
+    const trail = await contract.getAuditTrail(tid);
+    expect(trail.map((r: { status: bigint }) => r.status)).to.deep.equal([2n, 6n, 7n]);
+    expect(trail[2].prevRecordHash).to.equal(trail[1].recordHash);
+
+    const [valid] = await contract.verifyTrail(tid);
+    expect(valid).to.equal(true);
+    void HUMAN_REJECTED;
+  });
 });

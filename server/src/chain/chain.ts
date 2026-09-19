@@ -13,6 +13,12 @@ export const CLAIM_STATUSES = [
   'HUMAN_OVERRIDDEN',
   'PAID',
   'REJECTED',
+  'HUMAN_REVIEW',
+  'HUMAN_APPROVED',
+  'HUMAN_REJECTED',
+  /** Pipeline verdict alias — seals on-chain as REJECTED (5) but keeps the
+   *  review lane open (HUMAN_REVIEW / appeal) unlike terminal REJECTED. */
+  'AI_REJECTED',
 ] as const;
 
 export type ClaimStatusName = (typeof CLAIM_STATUSES)[number];
@@ -24,35 +30,65 @@ export const CLAIM_STATUS: Record<ClaimStatusName, number> = {
   HUMAN_OVERRIDDEN: 3,
   PAID: 4,
   REJECTED: 5,
+  HUMAN_REVIEW: 6,
+  HUMAN_APPROVED: 7,
+  HUMAN_REJECTED: 8,
+  AI_REJECTED: 5, // same on-chain slot as REJECTED (contract enum unchanged)
 };
+
+/** Claim statuses that unlock payout (RULE ZERO — everything else is frozen). */
+export const PAYOUT_ELIGIBLE: readonly ClaimStatusName[] = ['AI_APPROVED', 'HUMAN_APPROVED'] as const;
 
 export function claimIdToBytes32(claimId: string): string {
   return ethers.id(claimId); // keccak256(utf8(claimId))
 }
 
 /**
- * Canonical off-chain state hash of a claim's evidence.
- * Mirrors the pitch formula: keccak256(claimData + pHash + timestamp).
+ * Canonical state hash of a claim's evidence — the claim commitment that gets
+ * sealed on-chain. Accepts either legacy string labels (imageHashes) or the
+ * real crypto material (evidenceHashes / pHashes / verification digest).
  */
 export function computeStateHash(input: {
   claimId: string;
   lossType: string;
   claimantName: string;
   amountRequested: number;
-  imageHashes: string[];
+  /** Legacy string labels (seeded claims); hashes via keccak256(utf8(label)). */
+  imageHashes?: string[];
+  /** Real sha256 evidence digests (0x-hex or bare hex accepted). */
+  evidenceHashes?: string[];
+  /** Perceptual hashes of photos (64-char 01 strings). */
+  pHashes?: string[];
+  /** Verification log digest committed by DECISION records. */
+  verificationHash?: string;
   sealedAt: string; // ISO timestamp
 }): string {
-  return ethers.solidityPackedKeccak256(
-    ['string', 'string', 'string', 'uint256', 'bytes32[]', 'string'],
-    [
-      input.claimId,
-      input.lossType,
-      input.claimantName,
-      BigInt(input.amountRequested),
-      input.imageHashes.map((h) => ethers.id(h)),
-      input.sealedAt,
-    ]
+  const types: string[] = ['string', 'string', 'string', 'uint256'];
+  const values: (string | bigint | string[])[] = [
+    input.claimId,
+    input.lossType,
+    input.claimantName,
+    BigInt(input.amountRequested),
+  ];
+
+  const norm32 = (xs: string[]): string[] => xs.map((h) => (h.startsWith('0x') ? h : ethers.id(h)));
+  const imageHashes = norm32(input.imageHashes ?? []);
+  const evidenceHashes = norm32(input.evidenceHashes ?? []);
+  const pHashes = (input.pHashes ?? []).map((p) =>
+    ethers.solidityPackedKeccak256(['string'], [p])
   );
+  types.push('bytes32[]');
+  values.push([...imageHashes, ...evidenceHashes, ...pHashes]);
+
+  if (input.verificationHash !== undefined) {
+    types.push('bytes32');
+    values.push(input.verificationHash);
+  }
+
+  types.push('string');
+  values.push(input.sealedAt);
+
+  return ethers.solidityPackedKeccak256(types, values as never);
 }
 
 /** keccak256(abi.encode(prev, stateHash, status, ts, by, noteHash)) — same as the contract. */

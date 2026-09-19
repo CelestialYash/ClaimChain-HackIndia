@@ -18,7 +18,10 @@ contract ClaimAuditTrail {
         AI_FLAGGED,
         HUMAN_OVERRIDDEN,
         PAID,
-        REJECTED
+        REJECTED,
+        HUMAN_REVIEW,
+        HUMAN_APPROVED,
+        HUMAN_REJECTED
     }
 
     struct AuditRecord {
