@@ -1,4 +1,5 @@
 import type { ClaimStatusName } from './chain/chain.js';
+import type { DocReuseHit } from './ai/doc-registry.js';
 
 export interface Claim {
   id: string;
@@ -7,6 +8,11 @@ export interface Claim {
   amountRequested: number;
   status: ClaimStatusName;
   submittedAt: string;
+  /** Client contact details (demo/mock data — NOT real PII in the demo dataset). */
+  phone?: string;
+  district?: string;
+  village?: string;
+  aadhaarMasked?: string;
   imageHashes: string[]; // sha256 hex (evidence-derived); seeded claims keep legacy labels
   evidence: Evidence[];
   policyNumber?: string;
@@ -53,6 +59,35 @@ export interface VerificationRun {
   similarCases: SimilarCase[];
   /** Farmer-document intelligence summary (doc-verification spec §2–§5). Derived — not hashed. */
   docSummary?: DocSummary;
+  /** Document-reuse registry hits — the same document/Aadhaar seen on another claimant's claim. */
+  docReuseHits?: DocReuseHit[];
+  /** Per-document WHY-passed/failed report (one entry per evidence file). */
+  documentReport?: DocumentReportEntry[];
+}
+
+/** One check the pipeline ran that concerns a specific document. */
+export interface DocumentCheck {
+  /** Human-readable check name (e.g. "photo metadata integrity"). */
+  check: string;
+  verdict: 'passed' | 'warning' | 'failed';
+  /** The exact reason — stage details, fraud-rule text, or extracted fields. */
+  reason: string;
+}
+
+/** One evidence file's full per-document report entry. */
+export interface DocumentReportEntry {
+  fileId: string;
+  kind: Evidence['kind'];
+  filename: string;
+  sha256: string;
+  pHash: string | null;
+  exif: Evidence['exif'];
+  /** OCR-extracted identity/money fields (name, aadhaar masked, sums…). */
+  extracted: string[];
+  /** Every check the pipeline ran on this document, with its reason. */
+  checks: DocumentCheck[];
+  /** Aggregate: any failed check → failed; any warning → warning; else passed. */
+  verdict: 'passed' | 'warning' | 'failed' | 'not-checked';
 }
 
 /** Cross-document verification result surfaced to the frontend (stage 3/4/5). */

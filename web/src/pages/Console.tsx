@@ -25,6 +25,7 @@ import {
   STATUS_META,
   type Claim,
   type ClaimStatus,
+  type DocumentReportEntry,
   type LossType,
   type StageLog,
 } from '../lib/api';
@@ -103,6 +104,9 @@ function IntakeForm({ onCreated }: { onCreated: (id: string) => void }) {
   const [name, setName] = useState('Ramesh Kumar');
   const [lossType, setLossType] = useState<LossType>('flood');
   const [amount, setAmount] = useState(6500);
+  const [phone, setPhone] = useState('');
+  const [district, setDistrict] = useState('');
+  const [village, setVillage] = useState('');
   const [photos, setPhotos] = useState<File[]>([]);
   const [bills, setBills] = useState<File[]>([]);
   const [idDocs, setIdDocs] = useState<File[]>([]);
@@ -128,11 +132,13 @@ function IntakeForm({ onCreated }: { onCreated: (id: string) => void }) {
   };
 
   const create = useMutation({
-    mutationFn: () =>
-      api.createClaim({
+    mutationFn: () =>      api.createClaim({
         claimantName: name,
         lossType,
         amountRequested: amount,
+        ...(phone.trim() ? { phone: phone.trim() } : {}),
+        ...(district.trim() ? { district: district.trim() } : {}),
+        ...(village.trim() ? { village: village.trim() } : {}),
         photos,
         bills,
         idDocs,
@@ -205,6 +211,33 @@ function IntakeForm({ onCreated }: { onCreated: (id: string) => void }) {
               type="number"
               value={amount}
               onChange={(e) => setAmount(Number(e.target.value))}
+              className="w-full rounded-xl border border-black/10 bg-[#F5F5F5] px-3 py-2 text-sm text-black outline-none focus:border-black"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-black/50">Phone (10-digit)</span>
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
+              placeholder="10-digit mobile"
+              className="w-full rounded-xl border border-black/10 bg-[#F5F5F5] px-3 py-2 text-sm text-black outline-none focus:border-black"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-black/50">District</span>
+            <input
+              value={district}
+              onChange={(e) => setDistrict(e.target.value)}
+              placeholder="e.g. Yavatmal"
+              className="w-full rounded-xl border border-black/10 bg-[#F5F5F5] px-3 py-2 text-sm text-black outline-none focus:border-black"
+            />
+          </label>
+          <label className="block col-span-2">
+            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-black/50">Village / taluka</span>
+            <input
+              value={village}
+              onChange={(e) => setVillage(e.target.value)}
+              placeholder="e.g. Kanhoba (Ner taluka)"
               className="w-full rounded-xl border border-black/10 bg-[#F5F5F5] px-3 py-2 text-sm text-black outline-none focus:border-black"
             />
           </label>
@@ -375,6 +408,21 @@ function PipelineStepper({ claimId }: { claimId: string }) {
               <p className="whitespace-pre-line text-sm leading-relaxed text-black/80">{run.explanation}</p>
             </div>
 
+            {run.docReuseHits && run.docReuseHits.length > 0 && (
+              <div className="rounded-xl border border-[#ef4444]/40 bg-[#ef4444]/[0.06] p-4">
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-[#b91c1c]">Document reuse detected · R-DOC-REUSE</p>
+                <ul className="space-y-1.5">
+                  {run.docReuseHits.map((h, i) => (
+                    <li key={i} className="text-[11px] leading-snug text-[#b91c1c]">
+                      <span className="font-mono font-semibold">[{h.via}]</span> {h.detail}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {run.documentReport && run.documentReport.length > 0 && <DocumentReportPanel report={run.documentReport} />}
+
             {run.docSummary && (run.docSummary.registry.found || run.docSummary.aadhaar.found || run.docSummary.policy.found || run.docSummary.satellite.found) && (
               <div className="rounded-xl border border-black/10 p-4">
                 <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-black/50">Document intelligence · दस्तावेज़ जाँच</p>
@@ -448,6 +496,68 @@ function PipelineStepper({ claimId }: { claimId: string }) {
 }
 
 // ---------------------------------------------------------------------------
+// Per-document report — WHY each document passed or failed (clean per-file)
+// ---------------------------------------------------------------------------
+
+function DocVerdictChip({ verdict }: { verdict: DocumentReportEntry['verdict'] }) {
+  const map = {
+    passed: { cls: TONE_CLASS.ok, label: 'passed' },
+    warning: { cls: TONE_CLASS.warn, label: 'warning' },
+    failed: { cls: TONE_CLASS.bad, label: 'failed' },
+    'not-checked': { cls: TONE_CLASS.muted, label: 'not checked' },
+  } as const;
+  return <span className={`rounded-full border px-2 py-0.5 font-mono text-[9px] font-semibold uppercase ${map[verdict].cls}`}>{map[verdict].label}</span>;
+}
+
+function DocumentReportPanel({ report }: { report: DocumentReportEntry[] }) {
+  return (
+    <div className="rounded-xl border border-black/10 p-4">
+      <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-black/50">
+        Per-document report · why each document passed or failed
+      </p>
+      <div className="space-y-2">
+        {report.map((doc) => (
+          <details key={doc.fileId} className="group rounded-lg border border-black/10 open:bg-black/[0.015]">
+            <summary className="flex cursor-pointer list-none items-center gap-2.5 px-3 py-2.5">
+              <DocVerdictChip verdict={doc.verdict} />
+              <span className="min-w-0 flex-1 truncate text-xs font-semibold text-black">{doc.filename}</span>
+              <span className="rounded bg-black/5 px-1.5 py-0.5 font-mono text-[9px] uppercase text-black/50">{doc.kind}</span>
+            </summary>
+            <div className="space-y-2 border-t border-black/[0.06] px-3 pb-3 pt-2">
+              <div className="flex flex-wrap gap-x-4 gap-y-0.5 font-mono text-[9.5px] text-black/40">
+                <span>sha256 {short(doc.sha256)}</span>
+                {doc.pHash && <span>pHash {short(doc.pHash)}</span>}
+                {doc.exif.gps && <span>GPS {doc.exif.gps.lat.toFixed(3)}, {doc.exif.gps.lon.toFixed(3)}</span>}
+                {doc.exif.software && <span className="text-[#b91c1c]">edit tag {doc.exif.software}</span>}
+              </div>
+              {doc.extracted.length > 0 && (
+                <p className="text-[10.5px] leading-snug text-black/60">
+                  <span className="font-semibold text-black/70">Read:</span> {doc.extracted.join(' · ')}
+                </p>
+              )}
+              <ul className="space-y-1">
+                {doc.checks.map((c, i) => (
+                  <li key={i} className="flex items-start gap-2 text-[11px] leading-snug">
+                    <span
+                      className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${
+                        c.verdict === 'passed' ? 'bg-[#10b981]' : c.verdict === 'failed' ? 'bg-[#ef4444]' : 'bg-[#f59e0b]'
+                      }`}
+                    />
+                    <span className="text-black/80">
+                      <span className="font-semibold">{c.check}:</span> {c.reason}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </details>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Review + payout — the guarded human lanes
 // ---------------------------------------------------------------------------
 
@@ -455,6 +565,8 @@ function ReviewAndPay({ claim }: { claim: Claim }) {
   const qc = useQueryClient();
   const [note, setNote] = useState('');
   const [reviewer, setReviewer] = useState('inspector-7');
+  const [officerId, setOfficerId] = useState('');
+  const [attestChecked, setAttestChecked] = useState(false);
   const [upiRef, setUpiRef] = useState(`UPI-${claim.id.slice(-6)}`);
 
   const invalidate = () => {
@@ -464,18 +576,25 @@ function ReviewAndPay({ claim }: { claim: Claim }) {
     qc.invalidateQueries({ queryKey: ['stats'] });
   };
 
+  const attestation = {
+    officerName: reviewer,
+    ...(officerId.trim() ? { officerId: officerId.trim() } : {}),
+    acceptsResponsibility: true as const,
+  };
+
   const review = useMutation({
-    mutationFn: (status: 'HUMAN_APPROVED' | 'HUMAN_REJECTED') => api.review(claim.id, status, note, reviewer),
+    mutationFn: (status: 'HUMAN_APPROVED' | 'HUMAN_REJECTED') => api.review(claim.id, status, note, reviewer, attestation),
     onSuccess: invalidate,
   });
   const pay = useMutation({
-    mutationFn: () => api.pay(claim.id, upiRef),
+    mutationFn: () => api.pay(claim.id, upiRef, attestation),
     onSuccess: invalidate,
   });
 
   const flagged = claim.status === 'AI_FLAGGED' || claim.status === 'HUMAN_REVIEW';
   const payable = claim.status === 'AI_APPROVED' || claim.status === 'HUMAN_APPROVED';
   const noteOk = note.trim().length >= 20;
+  const attested = attestChecked && reviewer.trim().length >= 2;
 
   if (!flagged && !payable && claim.status !== 'PAID') {
     return (
@@ -514,14 +633,14 @@ function ReviewAndPay({ claim }: { claim: Claim }) {
             </div>
             <div className="flex gap-2">
               <button
-                disabled={!noteOk || review.isPending}
+                disabled={!noteOk || !attested || review.isPending}
                 onClick={() => review.mutate('HUMAN_APPROVED')}
                 className="flex-1 rounded-full bg-black py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-40"
               >
                 Approve & unlock
               </button>
               <button
-                disabled={!noteOk || review.isPending}
+                disabled={!noteOk || !attested || review.isPending}
                 onClick={() => review.mutate('HUMAN_REJECTED')}
                 className="flex-1 rounded-full border border-[#ef4444]/40 py-2.5 text-sm font-medium text-[#b91c1c] transition-colors hover:bg-[#ef4444]/10 disabled:opacity-40"
               >
@@ -545,7 +664,7 @@ function ReviewAndPay({ claim }: { claim: Claim }) {
                 className="flex-1 rounded-xl border border-black/10 bg-[#F5F5F5] px-3 py-2 font-mono text-xs text-black outline-none focus:border-black"
               />
               <button
-                disabled={pay.isPending || upiRef.trim().length < 4}
+                disabled={pay.isPending || upiRef.trim().length < 4 || !attested}
                 onClick={() => pay.mutate()}
                 className="rounded-full bg-black px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-40"
               >
@@ -554,6 +673,32 @@ function ReviewAndPay({ claim }: { claim: Claim }) {
             </div>
             {pay.isError && <p className="text-xs text-[#b91c1c]">{(pay.error as Error).message}</p>}
           </>
+        )}
+
+        {(flagged || payable) && (
+          <label className="flex items-start gap-2.5 rounded-xl border border-black/15 bg-black/[0.03] px-4 py-3">
+            <input
+              type="checkbox"
+              checked={attestChecked}
+              onChange={(e) => setAttestChecked(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-black"
+            />
+            <span className="text-[11px] leading-snug text-black/70">
+              <span className="font-semibold text-black">Officer attestation:</span> I,{' '}
+              <span className="font-mono">{reviewer || '(name required)'}</span>
+              {officerId.trim() ? <span className="font-mono"> · {officerId}</span> : null}, accept{' '}
+              <span className="font-semibold">full responsibility</span> for this decision. My name, the reason, and this attestation will be{' '}
+              <span className="font-semibold">permanently sealed on the blockchain</span> and cannot be edited or erased.
+            </span>
+          </label>
+        )}
+        {(flagged || payable) && (
+          <input
+            value={officerId}
+            onChange={(e) => setOfficerId(e.target.value)}
+            placeholder="Officer / badge ID (optional)"
+            className="w-full rounded-xl border border-black/10 bg-[#F5F5F5] px-3 py-2 text-xs text-black outline-none focus:border-black sm:max-w-56"
+          />
         )}
 
         {claim.status === 'PAID' && (
@@ -742,6 +887,12 @@ export default function Console() {
             <span className="hidden rounded-full border border-black/10 px-3 py-1 font-mono text-black/60 sm:block">
               records {health.data?.chain.totalRecords ?? '—'}
             </span>
+            <Link
+              to="/approved"
+              className="inline-flex items-center gap-1.5 rounded-full bg-black px-3.5 py-1 font-medium text-white transition-colors hover:bg-gray-800"
+            >
+              <BadgeCheck className="h-3 w-3" /> Approved claims
+            </Link>
             <a
               href={api.exportCsvUrl()}
               className="inline-flex items-center gap-1.5 rounded-full border border-black/10 px-3 py-1 font-medium text-black/70 transition-colors hover:border-black/40"

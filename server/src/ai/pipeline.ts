@@ -19,6 +19,8 @@ import {
   type RegistryFields,
 } from './docs.js';
 import { readEvidence } from '../store.js';
+import { checkDocumentReuse, registerDocument, type DocReuseHit } from './doc-registry.js';
+import type { DocumentCheck, DocumentReportEntry } from '../types.js';
 import {
   LOSS_META,
   POLICY_TABLE,
@@ -165,6 +167,8 @@ interface StageCtx {
   policyPaper: PolicyPaperFields | null;
   identityCross: ReturnType<typeof crossVerifyIdentity> | null;
   satellite: { fileId: string; pct: number; rung: string } | null;
+  /** Document-reuse registry hits (R-DOC-REUSE) computed pre-pipeline. */
+  docReuse: DocReuseHit[];
 }
 
 function runExifIntegrity(ctx: StageCtx): { log: StageLog; reasons: string[] } {
@@ -523,6 +527,16 @@ function runFraudRules(ctx: StageCtx, prevReasons: string[]): { log: StageLog; r
     }
   }
 
+  // R-DOC-REUSE: an identity/money document already seen on ANOTHER claimant's
+  // claim — byte-identical sha256, same masked Aadhaar under a different name,
+  // or a visually identical re-scan (pHash). The reason NAMES the prior claim,
+  // claimant and file so the reviewer (and audit trail) sees provenance.
+  for (const hit of ctx.docReuse) {
+    reasons.push(
+      `R-DOC-REUSE (${hit.via}): ${hit.detail} [prior: ${hit.prior.claimId} · claimant "${hit.prior.claimantName}" · file ${hit.prior.fileId}]`
+    );
+  }
+
   // R2: same photo pHash across different districts (the CLM-8919 story).
   const photos = ctx.own.filter((e) => (e.kind === 'photo' || e.kind === 'satellite') && e.pHash);
   for (const p of photos) {
@@ -555,6 +569,18 @@ function runFraudRules(ctx: StageCtx, prevReasons: string[]): { log: StageLog; r
 export async function runVerification(claim: Claim, allClaims: Map<string, Claim>): Promise<VerificationRun> {
   const startedAt = new Date();
   const stages: StageLog[] = [];
+
+  // DOCUMENT REGISTRY: fingerprint every identity/money document (sha256 +
+  // masked-Aadhaar backfill happens after OCR) so reuse across OTHER
+  // claimants' claims is caught — covers intake, addenda, retries AND seeds.
+  for (const ev of claim.evidence) {
+    if (ev.kind === 'photo' || ev.kind === 'satellite') continue;
+    try {
+      registerDocument(claim, ev, null);
+    } catch {
+      /* registry unavailable — reuse check degrades to pass-through */
+    }
+  }
 
   const own = claim.evidence;
   const foreignPhotos: Array<{ claimId: string; fileId: string; pHash: string }> = [];
@@ -629,6 +655,11 @@ export async function runVerification(claim: Claim, allClaims: Map<string, Claim
       ? crossVerifyIdentity(aadhaarFields, registryText)
       : null;
 
+  // Document-reuse registry: has any of this claim's identity/money documents
+  // (or this Aadhaar number) already been used under a different claimant?
+  // Runs BEFORE FRAUD_RULES so the hits flow into the stage as reasons.
+  const docReuse = checkDocumentReuse(claim, own, aadhaarFields);
+
   // Satellite/geotagged plot imagery → destruction % (CLIP zero-shot ladder).
   let satellite: { fileId: string; pct: number; rung: string } | null = null;
   const satEvidence = own.find((e) => e.kind === 'satellite');
@@ -655,6 +686,7 @@ export async function runVerification(claim: Claim, allClaims: Map<string, Claim
     policyPaper,
     identityCross,
     satellite,
+    docReuse,
   };
 
   const exif = runExifIntegrity(ctx);
@@ -754,6 +786,8 @@ export async function runVerification(claim: Claim, allClaims: Map<string, Claim
     stages,
     similarCases: damage.similarCases,
     docSummary,
+    docReuseHits: docReuse,
+    documentReport: buildDocumentReport(claim, own, stages, docSummary, docReuse),
     explanation: '',
   };
   run.explanation = explainRun(run, claim); // derived from logs, not hashed
@@ -763,4 +797,195 @@ export async function runVerification(claim: Claim, allClaims: Map<string, Claim
 /** sha256 of raw bytes — helper reused by the store. */
 export function digest(buf: Buffer): string {
   return '0x' + createHash('sha256').update(buf).digest('hex');
+}
+
+/* ------------------------------------------------------------------ */
+/* Per-document report — WHY each document passed or failed            */
+/* ------------------------------------------------------------------ */
+
+const DOC_CHECK_LABELS: Record<string, string> = {
+  EXIF_INTEGRITY: 'photo metadata integrity',
+  DUPLICATE_PHASH: 'duplicate-image registry scan',
+  OCR_EXTRACT: 'OCR readability',
+  POLICY_MATCH: 'policy cross-check',
+  DOC_CROSS: 'cross-document verification',
+  DAMAGE_ASSESS: 'visual damage / authenticity',
+  FRAUD_RULES: 'fraud rules (R2/R4/R5/R-DOC-REUSE)',
+};
+
+/** Map each evidence file to the stages that could judge it. */
+const PHOTO_STAGES = new Set(['EXIF_INTEGRITY', 'DUPLICATE_PHASH', 'DAMAGE_ASSESS']);
+const DOC_STAGES = new Set(['OCR_EXTRACT', 'POLICY_MATCH', 'DOC_CROSS']);
+
+function checksForFile(
+  kind: Evidence['kind'],
+  fileMap: FileVerdictMap,
+  stages: StageLog[],
+  docReuse: DocReuseHit[],
+): DocumentCheck[] {
+  const checks: DocumentCheck[] = [];
+  const push = (stage: string, verdict: DocumentCheck['verdict'], reason: string): void => {
+    checks.push({ check: DOC_CHECK_LABELS[stage] ?? stage, verdict, reason });
+  };
+  const photoLike = kind === 'photo' || kind === 'satellite';
+
+  // Stage results attach to a file when the stage concerns this file's kind,
+  // when the stage log names this file, or when the stage is claim-wide
+  // fraud aggregation (FRAUD_RULES).
+  for (const s of stages) {
+    if (s.stage === 'DECISION') continue;
+    if (s.result === 'INFO') continue;
+    const named = s.details.includes(fileMap.fileId);
+    const relevant =
+      (photoLike && PHOTO_STAGES.has(s.stage)) ||
+      (!photoLike && DOC_STAGES.has(s.stage)) ||
+      s.stage === 'FRAUD_RULES' ||
+      named;
+    if (!relevant) continue;
+    if (s.result === 'FAIL') {
+      push(s.stage, 'failed', s.details);
+      continue;
+    }
+    if (s.result === 'WARN' && (named || CLAIM_WIDE_STAGES.has(s.stage))) {
+      push(s.stage, 'warning', s.details);
+      continue;
+    }
+    if (s.result === 'PASS' && (named || CLAIM_WIDE_STAGES.has(s.stage))) {
+      push(s.stage, 'passed', s.details);
+    }
+  }
+
+  // Reuse hits are always per-file and worth surfacing even if FRAUD_RULES
+  // also lists them — this is the "same document seen before" headline.
+  for (const hit of docReuse.filter((h) => h.fileId === fileMap.fileId)) {
+    checks.push({
+      check: 'document-reuse registry',
+      verdict: 'failed',
+      reason: hit.detail,
+    });
+  }
+
+  // OCR-extracted fields summary for docs that carry identity/money data.
+  if (!photoLike && fileMap.extracted) {
+    checks.push({
+      check: 'extracted fields',
+      verdict: fileMap.extracted.length > 0 ? 'passed' : 'warning',
+      reason: fileMap.extracted.length > 0 ? fileMap.extracted.join(' · ') : 'no readable fields found',
+    });
+  }
+  return checks;
+}
+
+const CLAIM_WIDE_STAGES = new Set(['EXIF_INTEGRITY', 'DUPLICATE_PHASH', 'DAMAGE_ASSESS']);
+
+/** Stages whose result describes the whole claim, attached to every relevant file. */
+// (CLAIM_WIDE_STAGES kept for WARN/PASS attach gating above)
+
+/** Aggregate a file's checks into a per-document verdict. */
+function documentVerdict(checks: DocumentCheck[]): DocumentReportEntry['verdict'] {
+  if (checks.some((c) => c.verdict === 'failed')) return 'failed';
+  if (checks.length === 0) return 'not-checked';
+  if (checks.some((c) => c.verdict === 'warning')) return 'warning';
+  return 'passed';
+}
+
+/**
+ * Build the per-document, human-readable report: every evidence file, what
+ * the pipeline checked on it, and WHY it passed/warned/failed. Deterministic
+ * from the same inputs the verdict was computed from — safe to hash-seal.
+ */
+export function buildDocumentReport(
+  claim: Claim,
+  own: Evidence[],
+  stages: StageLog[],
+  docSummary: DocSummary,
+  docReuse: DocReuseHit[],
+): DocumentReportEntry[] {
+  void claim;
+  const fileVerdicts = new Map<string, FileVerdictMap>();
+
+  const photoDetails = stages.find((s) => s.stage === 'DAMAGE_ASSESS')?.details ?? '';
+  const dupDetails = stages.find((s) => s.stage === 'DUPLICATE_PHASH')?.details ?? '';
+  const exifDetails = '';
+  void exifDetails;
+
+  for (const ev of own) {
+    const isPhoto = ev.kind === 'photo' || ev.kind === 'satellite';
+    const extracted: string[] = [];
+    if (ev.kind === 'aadhaar') {
+      if (docSummary.aadhaar.name) extracted.push(`name: ${docSummary.aadhaar.name}`);
+      if (docSummary.aadhaar.nameDevanagari) extracted.push(`नाम: ${docSummary.aadhaar.nameDevanagari}`);
+      if (docSummary.aadhaar.aadhaarMasked) extracted.push(`aadhaar: ${docSummary.aadhaar.aadhaarMasked}`);
+    }
+    if (ev.kind === 'registry') {
+      if (docSummary.registry.deedType) extracted.push(`deed: ${docSummary.registry.deedType}`);
+      if (docSummary.registry.district) extracted.push(`district: ${docSummary.registry.district}`);
+      if (docSummary.registry.village) extracted.push(`village: ${docSummary.registry.village}`);
+      if (docSummary.registry.executionDate) extracted.push(`executed: ${docSummary.registry.executionDate}`);
+    }
+    if (ev.kind === 'policy') {
+      if (docSummary.policy.policyNumber) extracted.push(`policy no: ${docSummary.policy.policyNumber}`);
+      if (docSummary.policy.sumInsured) extracted.push(`sum insured: ₹${docSummary.policy.sumInsured}`);
+      if (docSummary.policy.coverage?.length) extracted.push(`covers: ${docSummary.policy.coverage.join(', ')}`);
+    }
+
+    fileVerdicts.set(ev.fileId, {
+      fileId: ev.fileId,
+      kind: ev.kind,
+      filename: ev.filename,
+      sha256: ev.sha256,
+      pHash: ev.pHash,
+      exif: ev.exif,
+      extracted,
+      checks: [],
+    });
+
+    // Pull the file-specific slice of stage details for DAMAGE/DUP stages.
+    const fileSlice = isPhoto
+      ? [photoDetails, dupDetails].filter((d) => d.includes(ev.fileId)).join(' · ') || undefined
+      : undefined;
+    fileVerdicts.get(ev.fileId)!.checks = checksForFile(
+      ev.kind,
+      { ...fileVerdicts.get(ev.fileId)!, extracted },
+      stages,
+      docReuse,
+    );
+    if (fileSlice) {
+      fileVerdicts.get(ev.fileId)!.checks.unshift({
+        check: 'visual evidence scan',
+        verdict: 'passed',
+        reason: fileSlice,
+      });
+    }
+  }
+
+  return Array.from(fileVerdicts.values()).map((f) => ({
+    fileId: f.fileId,
+    kind: f.kind,
+    filename: f.filename,
+    sha256: f.sha256,
+    pHash: f.pHash,
+    exif: f.exif,
+    extracted: f.extracted,
+    checks: f.checks,
+    verdict: documentVerdict(f.checks),
+  }));
+}
+
+/** Per-stage file-specific detail extraction (best effort, deterministic). */
+function stageDetailForFile(stage: string, own: Evidence[]): string {
+  void stage;
+  void own;
+  return ''; // details are joined per-file at the callsite; kept for symmetry
+}
+
+interface FileVerdictMap {
+  fileId: string;
+  kind: Evidence['kind'];
+  filename: string;
+  sha256: string;
+  pHash: string | null;
+  exif: Evidence['exif'];
+  extracted: string[];
+  checks: DocumentCheck[];
 }

@@ -78,7 +78,7 @@ export default function ExplorerPage() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search CLM-8919 · CLM-8920 · or any 0x… hash"
+            placeholder="Search CLM-M101 · or any 0x… hash"
             className="flex-1 bg-transparent px-2 py-2.5 text-sm text-black outline-none placeholder:text-black/30"
           />
           {submitted && (

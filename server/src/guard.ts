@@ -31,6 +31,49 @@ const HUMAN_RULES: Record<
 const TERMINAL: readonly ClaimStatusName[] = ['PAID', 'HUMAN_REJECTED'];
 
 /**
+ * Officer attestation — the accountability slot. Any human decision that
+ * overrides or unlocks what the AI decided (approve/reject a flagged claim,
+ * pay a human-approved claim) must carry an explicit attestation naming the
+ * issuing officer. It is sealed on-chain WITH the decision, so the officer
+ * owns the outcome forever — there is no anonymous override.
+ */
+export interface OfficerAttestation {
+  /** Officer display name (the accountable human). */
+  officerName: string;
+  /** Officer id (employee/badge id) for unambiguous audit attribution. */
+  officerId?: string;
+  /** Must be exactly true — the API rejects anything else. */
+  acceptsResponsibility: true;
+}
+
+const ATTESTATION_PHRASE = 'I accept full responsibility for this decision';
+
+/**
+ * Validate + format the attestation into the on-chain note. Throws 400 when
+ * the officer has not explicitly accepted responsibility.
+ */
+export function requireAttestation(
+  attestation: OfficerAttestation,
+): { sealedText: string; identity: string } {
+  if (attestation.acceptsResponsibility !== true) {
+    throw new GuardError(
+      'ATTESTATION_REQUIRED',
+      400,
+      'Officer must explicitly accept full responsibility for this decision (attestation.acceptsResponsibility = true) — it will be sealed on-chain under their name'
+    );
+  }
+  const name = attestation.officerName.trim();
+  if (name.length < 2) {
+    throw new GuardError('ATTESTATION_INVALID', 400, 'officerName is required (min 2 chars) for the sealed attestation');
+  }
+  const identity = attestation.officerId ? `${name} (${attestation.officerId.trim()})` : name;
+  return {
+    identity,
+    sealedText: `[ATTESTED by ${identity}] ${ATTESTATION_PHRASE}`,
+  };
+}
+
+/**
  * Validate a requested transition. Throws GuardError on any violation.
  * AI verdicts and PAID can NEVER enter through here — they are set by the
  * verification pipeline and the guarded /pay endpoint respectively.

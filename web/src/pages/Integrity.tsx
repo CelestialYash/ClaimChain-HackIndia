@@ -33,16 +33,19 @@ export default function IntegrityPage() {
   const claims = useQuery({ queryKey: ['claims'], queryFn: api.listClaims, refetchInterval: 5000, retry: 1 });
   const trail = useQuery({
     queryKey: ['integrity-trail'],
-    queryFn: () => api.auditTrail('CLM-8920'),
+    queryFn: () => api.auditTrail(pickClaimId()),
     refetchInterval: 5000,
     retry: 1,
     enabled: !!health.data?.chain.enabled,
   });
 
+  /** Prefer a PAID claim from the live register (richest trail); fall back to any claim. */
   const pickClaimId = () => {
-    const first = claims.data?.find((c) => c.id === 'CLM-8920') ?? claims.data?.[0];
-    return first?.id ?? 'CLM-8920';
+    const list = claims.data ?? [];
+    const paid = list.find((c) => c.status === 'PAID') ?? list[0];
+    return paid?.id ?? 'CLM-M101';
   };
+  const displayId = pickClaimId();
 
   const tamper = useMutation({
     mutationFn: () => api.tamper(pickClaimId(), 1),
@@ -87,7 +90,7 @@ export default function IntegrityPage() {
       <div className="mb-16 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <div className="flex items-center justify-between border-b border-black/10 px-5 py-3">
-            <h2 className="text-sm font-medium text-black">Live integrity — CLM-8920</h2>
+            <h2 className="text-sm font-medium text-black">Live integrity — {displayId}</h2>
             <Chip tone={ok ? 'ok' : 'bad'}>{ok ? 'chain valid' : `broken @ ${integrity?.onChainBreakAtIndex ?? integrity?.offChainBreakAtIndex}`}</Chip>
           </div>
           <div className="p-5">

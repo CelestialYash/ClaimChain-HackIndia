@@ -75,7 +75,7 @@ function buildSvg(opts: { keyword: string; dark: boolean; r: () => number }): st
 /** Build the synthetic evidence JPEG bytes for a given logical image. */
 export async function generateEvidenceJpeg(spec: {
   claimId: string;
-  kind: 'photo' | 'bill' | 'id';
+  kind: 'photo' | 'bill' | 'id' | 'registry' | 'aadhaar';
   variant: number; // variant 0 = primary; >=1 duplicates for collision demos
   keyword: string;
   dark?: boolean;

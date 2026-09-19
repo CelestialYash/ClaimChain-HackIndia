@@ -64,6 +64,52 @@ export interface VerificationRun {
   similarCases: SimilarCase[];
   explanation: string;
   docSummary?: DocSummary;
+  /** Document-reuse registry hits — same doc/Aadhaar seen on another claimant's claim. */
+  docReuseHits?: DocReuseHit[];
+  /** Per-document WHY-passed/failed report (one entry per evidence file). */
+  documentReport?: DocumentReportEntry[];
+}
+
+/** A document that was already used on ANOTHER claimant's claim (R-DOC-REUSE). */
+export interface DocReuseHit {
+  rule: 'R-DOC-REUSE';
+  fileId: string;
+  detail: string;
+  via: 'sha256' | 'pHash' | 'aadhaar';
+  prior: {
+    claimId: string;
+    claimantName: string;
+    fileId: string;
+    kind: string;
+    filename: string;
+    at: string;
+  };
+}
+
+/** Per-document report: every check the pipeline ran on one evidence file. */
+export interface DocumentReportEntry {
+  fileId: string;
+  kind: string;
+  filename: string;
+  sha256: string;
+  pHash: string | null;
+  exif: Evidence['exif'];
+  extracted: string[];
+  checks: Array<{ check: string; verdict: 'passed' | 'warning' | 'failed'; reason: string }>;
+  verdict: 'passed' | 'warning' | 'failed' | 'not-checked';
+}
+
+export interface DocumentReportResponse {
+  claimId: string;
+  claimantName: string;
+  lossType: LossType;
+  amountRequested: number;
+  verdict: VerificationRun['verdict'];
+  score: number;
+  decidedAt: string;
+  documentCount: number;
+  reuseHits: DocReuseHit[];
+  documents: DocumentReportEntry[];
 }
 
 /** Farmer-document intelligence (registry ↔ Aadhaar ↔ policy ↔ satellite). */
@@ -90,6 +136,33 @@ export interface Claim {
   verification?: VerificationRun;
   latestStateHash?: string;
   destructionPctClaimed?: number;
+  phone?: string;
+  district?: string;
+  village?: string;
+  aadhaarMasked?: string;
+}
+
+/** One row of the approved-claims register (settled clients). */
+export interface ApprovedClaim {
+  claimId: string;
+  claimantName: string;
+  phone: string;
+  district: string;
+  village: string;
+  aadhaarMasked: string;
+  policyNumber: string;
+  lossType: LossType;
+  amountRequested: number;
+  paidInr: number;
+  status: ClaimStatus;
+  decidedAt: string;
+  latestStateHash?: string;
+}
+
+export interface ApprovedClaimsResponse {
+  count: number;
+  totalPaidInr: number;
+  claims: ApprovedClaim[];
 }
 
 export interface Health {
@@ -174,7 +247,12 @@ export interface SimilarCasesResponse {
   cases: Array<SimilarCase & { lossType: LossType | null; amountRequested: number | null; status: ClaimStatus | null }>;
 }
 
-const BASE = '/api';
+/**
+ * API base: '/api' (Vite dev proxy) locally; set VITE_API_BASE for hosted
+ * deployments (e.g. https://claimchain-api.onrender.com/api) since Vercel's
+ * static build has no dev proxy.
+ */
+const BASE = (import.meta.env.VITE_API_BASE ?? '/api').replace(/\/$/, '');
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(BASE + path, init);
@@ -196,6 +274,9 @@ export interface CreateClaimInput {
   amountRequested: number;
   note?: string;
   policyNumber?: string;
+  phone?: string;
+  district?: string;
+  village?: string;
   /** Farmer-stated destruction % — cross-checked vs satellite imagery (R5). */
   destructionPctClaimed?: number;
   photos: File[];
@@ -215,6 +296,7 @@ export const api = {
 
   listClaims: () => request<Claim[]>('/claims'),
   getClaim: (id: string) => request<Claim>(`/claims/${id}`),
+  approvedClaims: () => request<ApprovedClaimsResponse>('/approved-claims'),
 
   /** Multipart intake — photos required (1–6), bills/idDocs optional. */
   createClaim: (input: CreateClaimInput) => {
@@ -224,6 +306,9 @@ export const api = {
     fd.set('amountRequested', String(input.amountRequested));
     if (input.note) fd.set('note', input.note);
     if (input.policyNumber) fd.set('policyNumber', input.policyNumber);
+    if (input.phone) fd.set('phone', input.phone);
+    if (input.district) fd.set('district', input.district);
+    if (input.village) fd.set('village', input.village);
     if (input.destructionPctClaimed != null) fd.set('destructionPctClaimed', String(input.destructionPctClaimed));
     for (const f of input.photos) fd.append('photos', f);
     for (const f of input.bills ?? []) fd.append('bills', f);
@@ -257,16 +342,25 @@ export const api = {
   auditTrail: (id: string) => request<AuditTrail>(`/claims/${id}/audit-trail`),
 
   /** Human review lane — AI verdicts are pipeline-only (server rejects them). */
-  review: (id: string, status: 'HUMAN_APPROVED' | 'HUMAN_REJECTED' | 'HUMAN_REVIEW', note: string, reviewer: string) =>
-    request<{ claim: Claim; sealed: boolean; txHash: string }>(`/claims/${id}/transitions`, {
-      ...jsonInit('POST', { status, note, reviewer }),
+  review: (
+    id: string,
+    status: 'HUMAN_APPROVED' | 'HUMAN_REJECTED' | 'HUMAN_REVIEW',
+    note: string,
+    reviewer: string,
+    attestation: { officerName: string; officerId?: string; acceptsResponsibility: true },
+  ) =>
+    request<{ claim: Claim; sealed: boolean; txHash: string; attestedBy: string }>(`/claims/${id}/transitions`, {
+      ...jsonInit('POST', { status, note, reviewer, attestation }),
     }),
 
   /** The ONLY payout path — server enforces RULE ZERO (409 FLAGGED_LOCKED). */
-  pay: (id: string, upiRef: string) =>
-    request<{ claim: Claim; sealed: boolean; paidInr: number; txHash: string }>(`/claims/${id}/pay`, {
-      ...jsonInit('POST', { upiRef }),
+  pay: (id: string, upiRef: string, attestation: { officerName: string; officerId?: string; acceptsResponsibility: true }) =>
+    request<{ claim: Claim; sealed: boolean; paidInr: number; txHash: string; attestedBy: string }>(`/claims/${id}/pay`, {
+      ...jsonInit('POST', { upiRef, attestation }),
     }),
+
+  /** Per-document WHY-passed/failed report (clean per-file breakdown). */
+  documentReport: (id: string) => request<DocumentReportResponse>(`/claims/${id}/document-report`),
 
   retryVerification: (id: string) =>
     request<{ claim: Claim; verification: VerificationRun; sealed: boolean }>(`/claims/${id}/verification/retry`, {

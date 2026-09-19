@@ -24,3 +24,4 @@ blockchain/typechain-types/
 
 # Coverage
 coverage/
+.smoke-fixtures/

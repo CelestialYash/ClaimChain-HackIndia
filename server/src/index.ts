@@ -23,9 +23,11 @@ import { runVerification, verificationHash, SCORE } from './ai/pipeline.js';
 import { buildExplanation } from './ai/explain.js';
 import { trainFromExistingClaims } from './ai/train.js';
 import { relabelClaim, memoryStats, trainClaim } from './ai/fraud-memory.js';
+import { registerDocument, enrichDocumentIdentity } from './ai/doc-registry.js';
 import { processFile, uploadMiddleware, uploadErrorMessage, filesFrom, requirePhotos } from './evidence.js';
-import { GuardError, assertTransition, assertPayoutEligible } from './guard.js';
+import { GuardError, assertTransition, assertPayoutEligible, requireAttestation } from './guard.js';
 import { seedClaims } from './seed.js';
+import { seedMock20 } from './seed-mock20.js';
 import { claims, readEvidence } from './store.js';
 import { loadPersistedClaims, schedulePersist } from './persist.js';
 import type { Claim, SimilarCase, VerificationRun } from './types.js';
@@ -155,13 +157,17 @@ app.get('/api/export.csv', (_req, res) => {
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const rows: string[] = [
-    ['claimId', 'claimant', 'lossType', 'amountRequestedInr', 'status', 'verdict', 'score', 'submittedAt', 'decidedAt', 'durationMs', 'latestStateHash'].join(','),
+    ['claimId', 'claimant', 'phone', 'district', 'village', 'aadhaarMasked', 'lossType', 'amountRequestedInr', 'status', 'verdict', 'score', 'submittedAt', 'decidedAt', 'durationMs', 'latestStateHash'].join(','),
   ];
   for (const c of claims.values()) {
     rows.push(
       [
         c.id,
         esc(c.claimantName),
+        c.phone ?? '',
+        esc(c.district ?? ''),
+        esc(c.village ?? ''),
+        c.aadhaarMasked ?? '',
         c.lossType,
         c.amountRequested,
         c.status,
@@ -258,6 +264,11 @@ const CreateClaimFields = z.object({
   amountRequested: z.coerce.number().int().positive().max(100_000),
   note: z.string().max(280).optional(),
   policyNumber: z.string().max(40).optional(),
+  /** Client contact details (optional at intake; surfaced in the approved-claims view). */
+  phone: z.string().min(10).max(15).optional(),
+  district: z.string().max(60).optional(),
+  village: z.string().max(60).optional(),
+  aadhaarMasked: z.string().max(16).optional(),
   /** Farmer-stated destruction % (0–100) — cross-checked vs satellite (R5). */
   destructionPctClaimed: z.coerce.number().int().min(0).max(100).optional(),
 });
@@ -298,6 +309,10 @@ app.post('/api/claims', intakeLimiter, (req, res) => {
       id: `CLM-${randomUUID().slice(0, 8).toUpperCase()}`,
       ...parsed.data,
       status: 'SUBMITTED',
+      phone: parsed.data.phone,
+      district: parsed.data.district,
+      village: parsed.data.village,
+      aadhaarMasked: parsed.data.aadhaarMasked,
       submittedAt: now,
       imageHashes: processed.map((p) => p.evidence.sha256),
       evidence: processed.map((p) => p.evidence),
@@ -324,6 +339,12 @@ app.post('/api/claims', intakeLimiter, (req, res) => {
     claims.set(claim.id, claim);
     schedulePersist(claim.id); // write-through: claim row is durable before the pipeline even starts
 
+    // DOCUMENT REGISTRY: fingerprint every identity/money document (sha256 +
+    // masked Aadhaar) so reuse across OTHER claimants' claims is caught later.
+    for (const p of processed) {
+      registerDocument(claim, p.evidence, null);
+    }
+
     // §2: the pipeline runs AUTOMATICALLY — no button.
     void runVerificationJob(claim.id);
 
@@ -347,6 +368,14 @@ async function runVerificationJob(claimId: string): Promise<void> {
     claim.verification = run;
     claim.status = run.verdict;
     schedulePersist(claim.id); // verdict + stage logs are durable
+
+    // Back-fill the parsed (masked) Aadhaar number into the doc registry so
+    // future claims can detect identity borrowing across claimants.
+    try {
+      enrichDocumentIdentity(claim.id, run.docSummary?.aadhaar.aadhaarMasked ?? null);
+    } catch (e) {
+      console.warn('[doc-registry] enrich failed:', (e as Error).message);
+    }
 
     // TRAIN: enroll the decided claim's photo embeddings into the fraud memory
     // (few-shot learning — every verdict makes the next one smarter).
@@ -385,6 +414,39 @@ app.get('/api/claims', (_req, res) => {
   res.json(Array.from(claims.values()));
 });
 
+// ---------------------------------------------------------------------------
+// Approved-claims register: settled clients with contact details
+// (PAID + HUMAN_APPROVED + AI_APPROVED, newest first)
+// ---------------------------------------------------------------------------
+const APPROVED_SET: ReadonlySet<Claim['status']> = new Set(['PAID', 'HUMAN_APPROVED', 'AI_APPROVED'] as Claim['status'][]);
+
+app.get('/api/approved-claims', (_req, res) => {
+  const approved = Array.from(claims.values())
+    .filter((c) => APPROVED_SET.has(c.status))
+    .sort((a, b) => (a.submittedAt < b.submittedAt ? 1 : -1))
+    .map((c) => ({
+      claimId: c.id,
+      claimantName: c.claimantName,
+      phone: c.phone ?? '—',
+      district: c.district ?? '—',
+      village: c.village ?? '—',
+      aadhaarMasked: c.aadhaarMasked ?? '—',
+      policyNumber: c.policyNumber ?? '—',
+      lossType: c.lossType,
+      amountRequested: c.amountRequested,
+      paidInr: c.status === 'PAID' ? c.amountRequested : 0,
+      status: c.status,
+      decidedAt: c.verification?.finishedAt ?? c.submittedAt,
+      latestStateHash: c.latestStateHash,
+    }));
+  const totalPaid = approved.reduce((s, c) => s + c.paidInr, 0);
+  return res.json({
+    count: approved.length,
+    totalPaidInr: totalPaid,
+    claims: approved,
+  });
+});
+
 app.get('/api/claims/:id', (req, res) => {
   const claim = claims.get(req.params.id);
   if (!claim) return res.status(404).json({ error: 'Claim not found' });
@@ -408,6 +470,30 @@ app.get('/api/claims/:id/verification', (req, res) => {
       ? { ...claim.verification, explanation: buildExplanation(claim.verification, claim, 'hi') }
       : claim.verification;
   res.json({ claimId: claim.id, status: 'COMPLETE', verification });
+});
+
+// ---------------------------------------------------------------------------
+// Per-document report: WHY each document passed or failed (clean, per file)
+// ---------------------------------------------------------------------------
+app.get('/api/claims/:id/document-report', (req, res) => {
+  const claim = claims.get(req.params.id);
+  if (!claim) return res.status(404).json({ error: 'Claim not found' });
+  if (!claim.verification) {
+    return res.status(409).json({ error: 'VERIFICATION_RUNNING', message: 'Document report is available once verification completes' });
+  }
+  const v = claim.verification;
+  return res.json({
+    claimId: claim.id,
+    claimantName: claim.claimantName,
+    lossType: claim.lossType,
+    amountRequested: claim.amountRequested,
+    verdict: v.verdict,
+    score: v.score,
+    decidedAt: v.finishedAt,
+    documentCount: v.documentReport?.length ?? 0,
+    reuseHits: v.docReuseHits ?? [],
+    documents: v.documentReport ?? [],
+  });
 });
 
 app.post('/api/claims/:id/verification/retry', async (req, res) => {
@@ -551,6 +637,12 @@ const HumanTransition = z.object({
   ]),
   note: z.string().min(1).max(280),
   reviewer: z.string().min(1).max(80).default('ops-agent'),
+  /** OFFICER ATTESTATION: the human who signs the override owns it forever. */
+  attestation: z.object({
+    officerName: z.string().min(2).max(80),
+    officerId: z.string().min(1).max(40).optional(),
+    acceptsResponsibility: z.literal(true),
+  }),
 });
 
 app.post('/api/claims/:id/transitions', async (req, res) => {
@@ -566,13 +658,17 @@ app.post('/api/claims/:id/transitions', async (req, res) => {
     // State machine whitelist + note-length rule (throws GuardError → 4xx).
     assertTransition(claim.status, parsed.data.status, parsed.data.note);
 
+    // OFFICER ATTESTATION: overrides must carry explicit, named responsibility
+    // (throws ATTESTATION_REQUIRED/ATTESTATION_INVALID → 4xx).
+    const attestation = requireAttestation(parsed.data.attestation);
+
     if (!chain.enabled || !chain.signerAddress) {
       return res.status(503).json({ error: 'Chain unavailable: sealing requires a connected node and PRIVATE_KEY' });
     }
 
     const sealedAt = new Date().toISOString();
     const stateHash = claimStateHash(claim, sealedAt);
-    const note = `[${parsed.data.reviewer}] ${parsed.data.status}: ${parsed.data.note}`.slice(0, 280);
+    const note = `[${parsed.data.reviewer}] ${parsed.data.status}: ${parsed.data.note} · ${attestation.sealedText}`.slice(0, 280);
 
     const tx = await chain.contract.sealClaimState(
       claimIdToBytes32(claim.id),
@@ -595,7 +691,7 @@ app.post('/api/claims/:id/transitions', async (req, res) => {
         .catch((e) => console.warn(`[train] ${claim.id} re-label failed:`, (e as Error).message));
     }
 
-    return res.json({ claim, sealed: true, txHash: tx.hash });
+    return res.json({ claim, sealed: true, txHash: tx.hash, attestedBy: attestation.identity });
   } catch (err) {
     if (res.headersSent) return;
     try {
@@ -613,6 +709,12 @@ app.post('/api/claims/:id/transitions', async (req, res) => {
 const PayInput = z.object({
   upiRef: z.string().min(4).max(64),
   amount: z.coerce.number().int().positive().optional(),
+  /** OFFICER ATTESTATION: the disbursing officer owns the payout decision. */
+  attestation: z.object({
+    officerName: z.string().min(2).max(80),
+    officerId: z.string().min(1).max(40).optional(),
+    acceptsResponsibility: z.literal(true),
+  }),
 });
 
 app.post('/api/claims/:id/pay', async (req, res) => {
@@ -628,6 +730,9 @@ app.post('/api/claims/:id/pay', async (req, res) => {
     // RULE ZERO (throws FLAGGED_LOCKED / INVALID_STATE as GuardError → 409).
     assertPayoutEligible(claim.status);
 
+    // OFFICER ATTESTATION: the disbursing officer is named and owns the payout.
+    const attestation = requireAttestation(parsed.data.attestation);
+
     if (!chain.enabled || !chain.signerAddress) {
       return res.status(503).json({ error: 'Chain unavailable: payout sealing requires the chain' });
     }
@@ -635,7 +740,7 @@ app.post('/api/claims/:id/pay', async (req, res) => {
     const amount = parsed.data.amount ?? claim.amountRequested;
     const sealedAt = new Date().toISOString();
     const stateHash = claimStateHash(claim, sealedAt);
-    const note = `UPI payout ₹${amount} · ref ${parsed.data.upiRef} · sealed by ClaimChain disbursement`;
+    const note = `UPI payout ₹${amount} · ref ${parsed.data.upiRef} · ${attestation.sealedText}`;
 
     const tx = await chain.contract.sealClaimState(
       claimIdToBytes32(claim.id),
@@ -648,7 +753,7 @@ app.post('/api/claims/:id/pay', async (req, res) => {
     claim.status = 'PAID';
     claim.latestStateHash = stateHash;
     schedulePersist(claim.id);
-    return res.json({ claim, sealed: true, paidInr: amount, txHash: tx.hash });
+    return res.json({ claim, sealed: true, paidInr: amount, txHash: tx.hash, attestedBy: attestation.identity });
   } catch (err) {
     if (res.headersSent) return;
     try {
@@ -945,7 +1050,10 @@ async function main() {
   loadPersistedClaims(chain.enabled ? chain.address : null);
 
   if (process.env.SEED_DEMO !== '0') {
-    await seedClaims(chain);
+    // 20-client mock dataset drives the whole demo now (approved-claims
+    // interface + doc-reuse demo pair). The legacy 4-claim narrative is
+    // retired — erase .data/ to start from the fresh 20-claim register.
+    await seedMock20(chain);
   }
 
   // Train the fraud memory from already-decided claims (lazy-loads CLIP).

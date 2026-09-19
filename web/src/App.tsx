@@ -6,13 +6,14 @@ import PipelinePage from './pages/Pipeline';
 import IntegrityPage from './pages/Integrity';
 import MemoryPage from './pages/Memory';
 import ExplorerPage from './pages/Explorer';
+import ApprovedClaims from './pages/ApprovedClaims';
 
 /**
  * ClaimChain SPA shell — Halo fintech design language.
  *  /          → Landing (marketing, video hero, marquees)
  *  /console   → working claims dashboard (real API, guarded lanes)
  *  /system    → architecture deep dive
- *  /pipeline  → 7-stage verification pipeline explained
+ *  /pipeline  → 8-stage verification pipeline explained
  *  /integrity → hash chain, guard rules, live tamper demo
  *  /memory    → trained fraud memory (live stats)
  *  /explorer  → live chain event feed + search
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/integrity" element={<IntegrityPage />} />
         <Route path="/memory" element={<MemoryPage />} />
         <Route path="/explorer" element={<ExplorerPage />} />
+        <Route path="/approved" element={<ApprovedClaims />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

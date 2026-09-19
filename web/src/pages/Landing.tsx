@@ -159,7 +159,7 @@ function InfoSection() {
                 never typed.
               </h3>
               <p className="text-base text-white/60">
-                Verdicts are computed by a 7-stage pipeline — no button decides a claim, and flagged claims are locked from payout by rule, not by trust.
+                Verdicts are computed by an 8-stage pipeline — no button decides a claim, and flagged claims are locked from payout by rule, not by trust.
               </p>
             </div>
           </div>
@@ -218,7 +218,7 @@ function UseCases() {
           </p>
           <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium">
             <Link to="/system" className="text-black/60 transition-colors hover:text-black">Architecture →</Link>
-            <Link to="/pipeline" className="text-black/60 transition-colors hover:text-black">The 7 stages →</Link>
+            <Link to="/pipeline" className="text-black/60 transition-colors hover:text-black">The 8 stages →</Link>
             <Link to="/integrity" className="text-black/60 transition-colors hover:text-black">Tamper demo →</Link>
           </div>
         </div>

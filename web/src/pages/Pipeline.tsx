@@ -62,6 +62,16 @@ const STAGES: StageSpec[] = [
   },
   {
     n: '05',
+    key: 'DOC_CROSS',
+    name: 'Cross-document verification',
+    reads: 'Bilingual OCR (Hindi + English) of the registry, Aadhaar and policy paper',
+    does: 'Classifies each farmer document, parses identity fields (owner name, masked Aadhaar, deed type, district, sum insured), then cross-verifies: does the Aadhaar holder appear in the land registry? A degraded scan is inconclusive — never a false fraud flag — while a readable deed naming someone else hard-fails. Also checks the claimed amount against the policy sum insured.',
+    pass: 'Aadhaar name found in the registry (match ≥ 50%) · amounts within cover',
+    fail: 'Readable deed naming a different owner (R-IDENTITY) · unreadable documents (R-DOC) · claim > 150% of sum insured',
+    tech: ['tesseract eng+hin', 'transliteration name match', 'inconclusive ≠ mismatch', 'R-DOC-REUSE registry'],
+  },
+  {
+    n: '06',
     key: 'DAMAGE_ASSESS',
     name: 'Visual damage scoring · the AI stage',
     reads: 'Photo pixels via OCR keywords, CLIP embeddings, trained k-NN memory, EXIF GPS',
@@ -71,17 +81,17 @@ const STAGES: StageSpec[] = [
     tech: ['CLIP ViT-B/32 (local ONNX)', 'k-NN fraud memory (k=5)', 'staged + AI-gen zero-shot prompts', 'loss-type relevance'],
   },
   {
-    n: '06',
+    n: '07',
     key: 'FRAUD_RULES',
     name: 'Deterministic fraud rules',
-    reads: 'All signals from stages 1–5 + photo GPS vs the district table',
-    does: 'Rule engine over the accumulated evidence: duplicate evidence across districts (R2), shared sha256 bytes between claims, EXIF edit signatures, and GPS provenance (R4) — a photo geotagged outside the service area or in a district not covered for the claimed loss type is named and failed. Every trigger is an auditable rule.',
+    reads: 'All signals from stages 1–6 + photo GPS vs the district table + the document-reuse registry',
+    does: 'Rule engine over the accumulated evidence: duplicate evidence across districts (R2), GPS provenance (R4), destruction exaggeration (R5), and document reuse (R-DOC-REUSE) — a registry, Aadhaar or policy already filed under a DIFFERENT claimant\'s name is caught by sha256, masked-Aadhaar or visual-scan match, and the reason names the prior claim, claimant and file. Every trigger is an auditable rule.',
     pass: 'No rule triggered',
-    fail: 'Any rule fires with a named reason (R2 duplicate · R4 gps-out-of-area / district-mismatch / gps-unresolved)',
-    tech: ['named rules R2/R3/R4', 'cross-claim byte comparison', 'offline district resolver (haversine)'],
+    fail: 'Any rule fires with a named reason (R2 duplicate · R4 gps · R5 destruction · R-DOC-REUSE with prior-claim provenance)',
+    tech: ['named rules R2/R4/R5/R-DOC-REUSE', 'document fingerprint registry', 'offline district resolver (haversine)'],
   },
   {
-    n: '07',
+    n: '08',
     key: 'DECISION',
     name: 'Threshold decision · computed, never typed',
     reads: 'The full stage log',
@@ -96,7 +106,7 @@ export default function PipelinePage() {
   return (
     <InnerPage
       eyebrow="AI verification"
-      title="Seven stages. One verdict. No buttons."
+      title="Eight stages. One verdict. No buttons."
       lead="The pipeline runs automatically after every submission and re-runs when evidence is added. Every stage emits a hash-committed log entry with real wall-clock timings — the AI shows its work, and the work is sealed."
     >
       <div className="mb-14 space-y-4">

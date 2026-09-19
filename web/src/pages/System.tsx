@@ -17,7 +17,7 @@ const LAYERS = [
   {
     icon: ScanSearch,
     name: 'AI verification layer',
-    desc: 'A deterministic 7-stage pipeline runs automatically after intake. Verdicts are computed from thresholds — no human, button, or prompt ever types an AI decision.',
+    desc: 'A deterministic 8-stage pipeline runs automatically after intake. Verdicts are computed from thresholds — no human, button, or prompt ever types an AI decision.',
     chips: ['EXIF integrity', 'pHash duplicate scan', 'Tesseract OCR', 'policy cross-check', 'CLIP damage + zero-shot', 'fraud rules', 'threshold decision'],
   },
   {
@@ -36,7 +36,7 @@ const LAYERS = [
 
 const FLOW = [
   { step: '01', title: 'Intake', desc: 'Multipart upload → sha256 + pHash + EXIF → genesis record sealed with evidence hashes.' },
-  { step: '02', title: 'Verify', desc: '7 stages run in sequence, each emitting a hash-committed log entry with real timings.' },
+  { step: '02', title: 'Verify', desc: '8 stages run in sequence, each emitting a hash-committed log entry with real timings.' },
   { step: '03', title: 'Decide', desc: 'Score + hard-fails map to APPROVED / FLAGGED / REJECTED. Flagged = payout-frozen.' },
   { step: '04', title: 'Review (if flagged)', desc: 'A human decides with a mandatory ≥20-char reason; the AI memory re-labels itself from that verdict.' },
   { step: '05', title: 'Pay & seal', desc: 'UPI ref is hashed into the final PAID record. The trail is complete and independently verifiable.' },
@@ -107,7 +107,7 @@ export default function SystemPage() {
 
       <div className="mt-12 flex flex-wrap items-center gap-4">
         <Link to="/pipeline" className="inline-flex items-center gap-3 rounded-full bg-black py-2 pl-7 pr-2 text-sm font-medium text-white transition-colors hover:bg-gray-800">
-          See the 7-stage pipeline
+          See the 8-stage pipeline
           <span className="rounded-full bg-white p-1.5"><ArrowRight className="h-4 w-4 text-black" /></span>
         </Link>
         <Link to="/integrity" className="inline-flex items-center gap-2 text-sm font-medium text-black/60 transition-colors hover:text-black">
